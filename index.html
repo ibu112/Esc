@@ -1,0 +1,2116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ESC — Chennai Pulse &amp; Grassroots Arena</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800;9..144,900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,0" rel="stylesheet" />
+  <!-- Leaflet Interactive Map (Free, Zero API Key) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            parchment: '#FAF5EA',
+            sand: '#F2EAD9',
+            sandDeep: '#E8DEC8',
+            ivory: '#FFFDF8',
+            espresso: '#261E16',
+            umber: '#6B5E50',
+            ochre: '#DFA436',
+            ochreDark: '#C58A21',
+            ochreSoft: '#F4E3BD',
+            sage: '#2B7A4B',
+            sageSoft: '#E3F0E6',
+            crimson: '#D63B47',
+            plum: '#7348C9',
+            plumSoft: '#EFE7FA',
+            slateBlue: '#2D6DA3'
+          },
+          fontFamily: {
+            serif: ['Fraunces', 'Georgia', 'serif'],
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background-color: #FAF5EA;
+      color: #261E16;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      position: relative;
+    }
+
+    /* Subtle Matte Archival Paper Grain */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    .warm-border { border: 1px solid #E4D8C1; }
+    .warm-border-b { border-bottom: 1px solid #E4D8C1; }
+    .warm-border-t { border-top: 1px solid #E4D8C1; }
+    .warm-border-r { border-right: 1px solid #E4D8C1; }
+    .warm-border-l { border-left: 1px solid #E4D8C1; }
+
+    .paper-card {
+      background: #FFFDF8;
+      border: 1px solid #E4D8C1;
+      box-shadow: 0 2px 10px rgba(72, 54, 30, 0.045);
+    }
+    .perk-card {
+      background:
+        radial-gradient(circle at 92% 45%, rgba(205, 160, 82, 0.22) 0%, rgba(205, 160, 82, 0.05) 32%, transparent 55%),
+        linear-gradient(180deg, #FBF2DE 0%, #F5E7CA 100%);
+      border: 1px solid #E4CFA3;
+      box-shadow: 0 3px 12px rgba(120, 86, 30, 0.07);
+    }
+    .glass-warm {
+      background: rgba(250, 245, 234, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #F2EAD9; }
+    ::-webkit-scrollbar-thumb { background: #D2C3A8; border-radius: 999px; }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(1.3); }
+    }
+    .live-dot { animation: pulseDot 1.4s ease-in-out infinite; }
+
+    .tab-view { display: none; }
+    .tab-view.active { display: block; animation: fadeIn 0.2s ease-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Warm Leaflet Map Overrides */
+    .leaflet-container { font-family: 'Plus Jakarta Sans', sans-serif; background: #EFE7D6; }
+    .leaflet-popup-content-wrapper {
+      background: #FFFDF8;
+      color: #261E16;
+      border: 1px solid #DECFA9;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(38, 30, 22, 0.16);
+    }
+    .leaflet-popup-tip { background: #FFFDF8; }
+    .esc-pin {
+      display: flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px; border-radius: 9999px; font-size: 16px;
+      border: 2.5px solid #FFFDF8; box-shadow: 0 4px 12px rgba(38, 30, 22, 0.32);
+      transition: transform 0.16s ease;
+    }
+    .esc-pin:hover { transform: scale(1.15); }
+  </style>
+</head>
+<body class="min-h-screen bg-parchment text-espresso selection:bg-ochreSoft selection:text-espresso">
+
+  <!-- APP SHELL -->
+  <div class="max-w-[1440px] mx-auto min-h-screen flex relative z-10">
+
+    <!-- ===================================================== -->
+    <!-- DESKTOP LEFT NAVIGATION RAIL (WARM MADRAS SAND)       -->
+    <!-- ===================================================== -->
+    <aside class="hidden lg:flex flex-col w-64 shrink-0 sticky top-0 h-screen p-5 warm-border-r justify-between bg-sand/75 relative overflow-hidden">
+      <div class="space-y-7 relative z-10">
+        <!-- Brand -->
+        <div class="flex items-center justify-between px-1">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-ochre text-espresso font-serif font-black text-xl flex items-center justify-center shadow-sm">
+              E
+            </div>
+            <div>
+              <span class="font-serif font-extrabold text-xl tracking-tight leading-none block">ESC</span>
+              <span class="block text-[10px] font-mono uppercase tracking-[0.18em] text-umber mt-0.5">Chennai · IRL</span>
+            </div>
+          </div>
+          <button onclick="openModal('modal-safety')" title="Trust &amp; Safety Model" class="w-8 h-8 rounded-lg hover:bg-sandDeep/60 flex items-center justify-center text-sage transition">
+            <span class="material-symbols-outlined text-[19px]">verified_user</span>
+          </button>
+        </div>
+
+        <!-- Primary Nav -->
+        <nav class="space-y-1.5" id="desktopNav">
+          <button onclick="switchTab('pulse')" data-nav="pulse" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all">
+            <span class="material-symbols-outlined text-[20px]">explore</span>
+            <span>Pulse</span>
+            <span class="ml-auto text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-ivory warm-border text-umber" id="badge-events">6</span>
+          </button>
+          <button onclick="switchTab('arena')" data-nav="arena" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all">
+            <span class="material-symbols-outlined text-[20px]">trophy</span>
+            <span>Arena</span>
+            <span class="ml-auto flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-crimson/10 text-crimson">
+              <span class="w-1.5 h-1.5 rounded-full bg-crimson live-dot"></span>LIVE
+            </span>
+          </button>
+          <button onclick="switchTab('connect')" data-nav="connect" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all">
+            <span class="material-symbols-outlined text-[20px]">diversity_3</span>
+            <span>Connect</span>
+          </button>
+          <button onclick="switchTab('hub')" data-nav="hub" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all">
+            <span class="material-symbols-outlined text-[20px]">chat_bubble</span>
+            <span>Hub</span>
+            <span class="ml-auto text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-ochreSoft text-espresso" id="badge-chats">2</span>
+          </button>
+        </nav>
+
+        <!-- Host CTA -->
+        <button onclick="openModal('modal-host')" class="w-full py-3 px-4 rounded-xl bg-ochre hover:bg-ochreDark text-espresso font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition shadow-sm">
+          <span class="material-symbols-outlined text-[19px]">add_circle</span>
+          Host a Drop
+        </button>
+      </div>
+
+      <!-- Subtle Inline Chennai Heritage Architecture Sketch -->
+      <div class="pointer-events-none select-none opacity-25 -mx-5 -mb-2 mt-auto">
+        <svg viewBox="0 0 260 110" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto">
+          <path d="M10 105 H250" stroke="#7A6548" stroke-width="1.2"/>
+          <path d="M35 105 V65 H115 V105" stroke="#7A6548" stroke-width="1.2" fill="#E6D8BC" fill-opacity="0.45"/>
+          <path d="M115 105 V52 H180 V105" stroke="#7A6548" stroke-width="1.2" fill="#DFCEA9" fill-opacity="0.5"/>
+          <path d="M132 52 C132 32 163 32 163 52" stroke="#7A6548" stroke-width="1.3" fill="#D5B87B" fill-opacity="0.4"/>
+          <line x1="147.5" y1="22" x2="147.5" y2="33" stroke="#7A6548" stroke-width="1.2"/>
+          <path d="M52 105 V84 C52 78 62 78 62 84 V105 M74 105 V84 C74 78 84 78 84 84 V105 M96 105 V84 C96 78 106 78 106 84 V105" stroke="#7A6548" stroke-width="1"/>
+          <path d="M130 105 V78 C130 70 144 70 144 78 V105 M153 105 V78 C153 70 167 70 167 78 V105" stroke="#7A6548" stroke-width="1"/>
+          <circle cx="28" cy="54" r="18" fill="#5E7B4C" fill-opacity="0.28"/>
+          <circle cx="44" cy="46" r="14" fill="#5E7B4C" fill-opacity="0.22"/>
+          <circle cx="206" cy="68" r="20" fill="#5E7B4C" fill-opacity="0.24"/>
+          <path d="M28 105 V66 M206 105 V74" stroke="#6E5A3E" stroke-width="1.3"/>
+        </svg>
+      </div>
+
+      <!-- Mini Passport Card -->
+      <div onclick="switchTab('hub'); setHubSubTab('passport')" class="relative z-10 p-3 rounded-2xl bg-ivory warm-border hover:border-ochre cursor-pointer transition shadow-sm">
+        <div class="flex items-center gap-3">
+          <div id="railAvatar" class="w-10 h-10 rounded-full bg-slateBlue/80 flex items-center justify-center font-serif font-bold text-base text-white">A</div>
+          <div class="min-w-0 flex-1">
+            <p id="railName" class="text-sm font-bold text-espresso truncate">Aarav</p>
+            <p class="text-[11px] text-umber font-mono flex items-center gap-1">
+              <span class="text-sage font-bold">98%</span> Show-Up
+            </p>
+          </div>
+          <span id="railProBadge" class="hidden text-[10px] font-mono px-1.5 py-0.5 rounded bg-ochreSoft text-espresso font-bold">ESC+</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===================================================== -->
+    <!-- CENTER MAIN CANVAS                                    -->
+    <!-- ===================================================== -->
+    <div class="flex-1 min-w-0 flex flex-col pb-24 lg:pb-10 relative">
+
+      <!-- Subtle Top Botanical Watermark (Matches Mockup Vibe) -->
+      <svg class="hidden md:block pointer-events-none select-none absolute top-0 right-10 w-64 opacity-[0.16] z-0" viewBox="0 0 260 110" fill="none">
+        <path d="M240 0 C205 28 165 44 108 82" stroke="#5D6B42" stroke-width="2" stroke-linecap="round"/>
+        <ellipse cx="185" cy="24" rx="16" ry="7" transform="rotate(-24 185 24)" fill="#7A8A54"/>
+        <ellipse cx="152" cy="40" rx="18" ry="8" transform="rotate(-32 152 40)" fill="#657644"/>
+        <ellipse cx="122" cy="64" rx="15" ry="7" transform="rotate(-18 122 64)" fill="#8B9962"/>
+        <ellipse cx="198" cy="48" rx="14" ry="6" transform="rotate(20 198 48)" fill="#8B9962"/>
+        <ellipse cx="164" cy="68" rx="15" ry="6" transform="rotate(14 164 68)" fill="#657644"/>
+      </svg>
+
+      <!-- MOBILE TOP BAR -->
+      <header class="lg:hidden sticky top-0 z-30 glass-warm warm-border-b px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-ochre text-espresso font-serif font-black flex items-center justify-center">E</div>
+          <div>
+            <span class="font-serif font-extrabold text-lg leading-none">ESC</span>
+            <span class="block text-[10px] font-mono text-umber">CHENNAI · IRL</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="openModal('modal-host')" class="px-3 py-1.5 rounded-lg bg-ochre text-espresso font-bold text-xs flex items-center gap-1">
+            <span class="material-symbols-outlined text-[16px]">add</span> Host
+          </button>
+          <button onclick="openModal('modal-safety')" class="w-8 h-8 rounded-lg bg-ivory warm-border flex items-center justify-center text-sage" title="Trust &amp; Safety">
+            <span class="material-symbols-outlined text-[18px]">verified_user</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- MAIN VIEWS CONTAINER -->
+      <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-4xl w-full mx-auto relative z-10">
+
+        <!-- ======================================================= -->
+        <!-- TAB 1: PULSE (CITY DROPS, SPORTS, SAFE SPACES & MAP)    -->
+        <!-- ======================================================= -->
+        <section id="view-pulse" class="tab-view active space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <p class="text-[11px] font-mono font-bold uppercase tracking-[0.2em] text-ochreDark mb-1">Stop Scrolling · Start Living</p>
+              <h1 class="font-serif text-3xl sm:text-4xl font-extrabold tracking-tight text-espresso leading-none">Chennai Pulse</h1>
+            </div>
+
+            <!-- Drops / Map Toggle -->
+            <div class="inline-flex p-1 rounded-xl bg-sand warm-border self-start shadow-sm">
+              <button onclick="setPulseMode('list')" id="btn-pulse-list" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-espresso text-ivory flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[15px]">grid_view</span> Drops
+              </button>
+              <button onclick="setPulseMode('map')" id="btn-pulse-map" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-umber hover:text-espresso flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[15px]">map</span> Map
+              </button>
+            </div>
+          </div>
+
+          <!-- Natural-Language Search -->
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-umber text-[20px]">search</span>
+            <input id="pulseSearch" type="text" oninput="renderEvents()" placeholder='Try "football", "queer", "skate", "Adyar", or "free"...'
+              class="w-full pl-11 pr-4 py-3 rounded-2xl bg-ivory warm-border text-sm text-espresso placeholder-umber/70 focus:outline-none focus:border-ochre transition shadow-sm" />
+          </div>
+
+          <!-- Category Filter Pills -->
+          <div class="flex gap-2 overflow-x-auto no-scrollbar pb-0.5" id="pulseFilters"></div>
+
+          <!-- Warm Coffee-Wash Partner Perk Banner -->
+          <div class="p-4 rounded-2xl perk-card flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3.5">
+              <div class="w-11 h-11 rounded-xl bg-ochreSoft/90 border border-ochre/30 text-espresso flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined">local_cafe</span>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-ochreSoft text-espresso font-bold border border-ochre/30">Partner Perk</span>
+                  <span class="text-xs text-umber font-medium">Nungambakkam · <span id="brewPerksLeft">14</span> left</span>
+                </div>
+                <p class="text-sm font-bold text-espresso mt-0.5">The Brew Room — 25% off post-match filter coffee for ESC groups</p>
+              </div>
+            </div>
+            <button onclick="claimPerk('perk-brew')" class="px-4 py-2 rounded-xl bg-ochre hover:bg-ochreDark text-espresso font-bold text-xs transition shrink-0 shadow-sm">
+              Claim Perk
+            </button>
+          </div>
+
+          <!-- List View -->
+          <div id="pulseListContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+          <!-- Interactive Leaflet Voyager Map View -->
+          <div id="pulseMapContainer" class="hidden space-y-4">
+            <div class="rounded-2xl overflow-hidden warm-border bg-sand h-[390px] relative shadow-sm">
+              <div id="chennai-leaflet-map" class="w-full h-full z-0"></div>
+              <div class="absolute top-3 left-3 z-[400] px-3 py-1.5 rounded-xl bg-ivory/95 warm-border text-xs font-mono text-espresso flex items-center gap-2 shadow">
+                <span class="w-2 h-2 rounded-full bg-sage"></span>
+                <span id="mapFocusLabel">Chennai Live Pins (Drops · Cups · Perks)</span>
+              </div>
+            </div>
+            <p class="text-xs text-umber font-medium">Tap any drop below to fly to its Chennai location or launch Google Maps directions:</p>
+            <div id="mapPinList" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+          </div>
+        </section>
+
+        <!-- ======================================================= -->
+        <!-- TAB 2: ARENA (LIVE TELECAST, COMPETITIONS, TEAMS, SCOUT)-->
+        <!-- ======================================================= -->
+        <section id="view-arena" class="tab-view space-y-7">
+          <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+            <div>
+              <p class="text-[11px] font-mono font-bold uppercase tracking-[0.18em] text-crimson mb-1 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-crimson live-dot"></span> Grassroots Chennai League
+              </p>
+              <h1 class="font-serif text-3xl sm:text-4xl font-extrabold tracking-tight text-espresso leading-none">The Arena</h1>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="selectLiveMatch(0)" id="match-pill-0" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-crimson text-white transition shadow-sm">
+                ⚽ 5v5 Final
+              </button>
+              <button onclick="selectLiveMatch(1)" id="match-pill-1" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-ivory text-umber warm-border hover:text-espresso transition">
+                ♟️ Rapid Chess
+              </button>
+            </div>
+          </div>
+
+          <!-- LIVE MATCH TELECAST THEATER (High-Contrast Broadcast Card) -->
+          <div class="rounded-2xl overflow-hidden paper-card">
+            <div class="relative p-5 sm:p-6 bg-gradient-to-br from-[#231B14] via-[#1B1510] to-[#2C2118] text-ivory overflow-hidden">
+              <div class="absolute inset-0 opacity-10 pointer-events-none"
+                   style="background-image: linear-gradient(rgba(255,245,225,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,245,225,0.2) 1px, transparent 1px); background-size: 36px 36px;"></div>
+
+              <div class="relative z-10 flex flex-wrap items-center justify-between gap-2 mb-5">
+                <div class="flex items-center gap-2">
+                  <span class="px-2.5 py-1 rounded-md bg-crimson text-white font-mono text-[10px] font-bold flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-white live-dot"></span> LIVE TELECAST
+                  </span>
+                  <span id="liveTournamentName" class="text-xs font-mono text-ochreSoft">Chennai Turf Cup · Final</span>
+                </div>
+                <div class="flex items-center gap-3 text-xs font-mono text-ochreSoft">
+                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[15px] text-ochre">visibility</span> <span id="liveViewers">248</span></span>
+                  <span class="px-2 py-0.5 rounded bg-black/40 border border-white/10 text-ochre font-bold" id="liveClock">38:14</span>
+                </div>
+              </div>
+
+              <div class="relative z-10 grid grid-cols-3 items-center gap-3 py-3">
+                <div class="text-center">
+                  <div id="liveHomeBadge" class="w-12 h-12 sm:w-14 sm:h-14 mx-auto rounded-2xl bg-ochre/20 border border-ochre/40 flex items-center justify-center font-serif font-extrabold text-lg text-ochre mb-2">IS</div>
+                  <p id="liveHomeName" class="font-serif font-bold text-sm sm:text-base leading-tight">IITM Streetballers</p>
+                  <p id="liveHomeArea" class="text-[11px] text-ochreSoft/70">Adyar</p>
+                </div>
+
+                <div class="text-center">
+                  <div class="font-mono font-bold text-3xl sm:text-5xl tracking-tight text-white">
+                    <span id="liveHomeScore">3</span>
+                    <span class="text-white/30 mx-1">:</span>
+                    <span id="liveAwayScore">2</span>
+                  </div>
+                  <div class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-[11px] text-ochreSoft">
+                    <span class="w-2 h-2 rounded-full bg-ochre live-dot"></span>
+                    <span id="liveVenue">T. Nagar Arena Turf</span>
+                  </div>
+                </div>
+
+                <div class="text-center">
+                  <div id="liveAwayBadge" class="w-12 h-12 sm:w-14 sm:h-14 mx-auto rounded-2xl bg-white/10 border border-white/25 flex items-center justify-center font-serif font-extrabold text-lg text-ivory mb-2">LL</div>
+                  <p id="liveAwayName" class="font-serif font-bold text-sm sm:text-base leading-tight">Loyola Lions</p>
+                  <p id="liveAwayArea" class="text-[11px] text-ochreSoft/70">Nungambakkam</p>
+                </div>
+              </div>
+
+              <div class="relative z-10 mt-4 p-3 rounded-xl bg-black/35 border border-white/10 flex items-center justify-between gap-3">
+                <p id="liveCommentary" class="text-xs text-ochreSoft truncate">⚡ 38' — Karthik (IITM) nutmegs defender on the right wing!</p>
+                <button onclick="cheerLiveMatch()" class="px-3 py-1 rounded-lg bg-ochre hover:bg-ochreDark text-espresso text-xs font-mono font-bold transition shrink-0">
+                  👏 Cheer (<span id="liveCheers">84</span>)
+                </button>
+              </div>
+            </div>
+
+            <!-- In-Stream Local Sponsor Strip -->
+            <div class="px-5 py-2.5 bg-ochreSoft/60 warm-border-b flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span class="text-espresso font-medium flex items-center gap-1.5">
+                <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-espresso text-ochre font-bold">SPONSOR</span>
+                <span id="liveSponsorText">Broadcast powered by Decathlon OMR — Flat ₹300 off turf boots for viewers</span>
+              </span>
+              <button onclick="claimPerk('perk-decathlon')" class="font-bold text-espresso underline underline-offset-2 hover:text-ochreDark">Grab Deal →</button>
+            </div>
+
+            <!-- Spectator Chat -->
+            <div class="p-4 bg-ivory">
+              <div id="liveChatFeed" class="space-y-1.5 max-h-28 overflow-y-auto mb-3 text-xs"></div>
+              <div class="flex gap-2">
+                <input id="liveChatInput" type="text" placeholder="Drop a live reaction or scout note..."
+                  onkeydown="if(event.key==='Enter') sendLiveChat()"
+                  class="flex-1 px-3.5 py-2 rounded-xl bg-parchment warm-border text-xs text-espresso placeholder-umber/70 focus:outline-none focus:border-ochre" />
+                <button onclick="sendLiveChat()" class="px-4 py-2 rounded-xl bg-espresso hover:bg-ochre hover:text-espresso text-ivory text-xs font-bold transition">Send</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Open Competitions -->
+          <div class="space-y-3.5">
+            <div class="flex items-center justify-between">
+              <h2 class="font-serif text-xl font-bold text-espresso">Open Chennai Competitions</h2>
+              <span class="text-xs font-mono text-umber">Solo Free Agents &amp; Squads</span>
+            </div>
+            <div id="tournamentList" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+          </div>
+
+          <!-- Regional Teams + Talent Scout Radar -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <div class="lg:col-span-7 rounded-2xl paper-card p-5 space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h2 class="font-serif text-xl font-bold text-espresso">Top Regional Teams</h2>
+                  <p class="text-xs text-umber">Verified Chennai Season 4 Standings</p>
+                </div>
+                <span class="text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg bg-sand text-espresso">CHENNAI</span>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead>
+                    <tr class="text-umber font-mono uppercase warm-border-b">
+                      <th class="pb-2.5">#</th>
+                      <th class="pb-2.5">Team</th>
+                      <th class="pb-2.5">Sport</th>
+                      <th class="pb-2.5 text-right">W-L</th>
+                      <th class="pb-2.5 text-right">PTS</th>
+                    </tr>
+                  </thead>
+                  <tbody id="teamLeaderboard" class="divide-y divide-[#ECE3D2]"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="lg:col-span-5 rounded-2xl paper-card p-5 space-y-4">
+              <div>
+                <div class="flex items-center gap-2">
+                  <h2 class="font-serif text-xl font-bold text-espresso">Rising Talent</h2>
+                  <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-sageSoft text-sage">SCOUT RADAR</span>
+                </div>
+                <p class="text-xs text-umber">Grassroots local MVPs verified on ESC</p>
+              </div>
+              <div id="talentSpotlight" class="space-y-3"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ======================================================= -->
+        <!-- TAB 3: CONNECT (FRIENDS, CREWS & BIDIRECTIONAL SPARK)   -->
+        <!-- ======================================================= -->
+        <section id="view-connect" class="tab-view space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <p class="text-[11px] font-mono font-bold uppercase tracking-[0.18em] text-plum mb-1">Activity-First · Bidirectional Safe Graph</p>
+              <h1 class="font-serif text-3xl sm:text-4xl font-extrabold tracking-tight text-espresso leading-none">Connect</h1>
+            </div>
+
+            <div class="inline-flex p-1 rounded-xl bg-sand warm-border self-start shadow-sm">
+              <button onclick="setConnectMode('friends')" data-cmode="friends" class="cmode-btn px-4 py-1.5 rounded-lg text-xs font-bold transition">Friends</button>
+              <button onclick="setConnectMode('crews')" data-cmode="crews" class="cmode-btn px-4 py-1.5 rounded-lg text-xs font-bold transition">Crews</button>
+              <button onclick="setConnectMode('spark')" data-cmode="spark" class="cmode-btn px-4 py-1.5 rounded-lg text-xs font-bold transition">Spark ✨</button>
+            </div>
+          </div>
+
+          <!-- Inclusive Community & Orientation Filter Bar -->
+          <div class="p-4 rounded-2xl paper-card space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="text-xs font-bold text-espresso flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[17px] text-plum">verified_user</span>
+                Community &amp; Inclusive Identity Filter
+              </span>
+              <span id="safeGraphNote" class="text-[11px] font-mono text-sage font-semibold">Public venues only · Safe Graph ON</span>
+            </div>
+            <div class="flex flex-wrap gap-2" id="identityFilterBar"></div>
+          </div>
+
+          <div id="connectGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </section>
+
+        <!-- ======================================================= -->
+        <!-- TAB 4: HUB (CHATS, PERKS WALLET & PASSPORT + AI KEY)    -->
+        <!-- ======================================================= -->
+        <section id="view-hub" class="tab-view space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <p class="text-[11px] font-mono font-bold uppercase tracking-[0.18em] text-slateBlue mb-1">Your Real-World Command Center</p>
+              <h1 class="font-serif text-3xl sm:text-4xl font-extrabold tracking-tight text-espresso leading-none">Hub</h1>
+            </div>
+
+            <div class="inline-flex p-1 rounded-xl bg-sand warm-border self-start shadow-sm">
+              <button onclick="setHubSubTab('chats')" data-htab="chats" class="htab-btn px-4 py-1.5 rounded-lg text-xs font-bold transition">Chats</button>
+              <button onclick="setHubSubTab('perks')" data-htab="perks" class="htab-btn px-4 py-1.5 rounded-lg text-xs font-bold transition">Perks &amp; Passes</button>
+              <button onclick="setHubSubTab('passport')" data-htab="passport" class="htab-btn px-4 py-1.5 rounded-lg text-xs font-bold transition">Passport</button>
+            </div>
+          </div>
+
+          <!-- HUB SUB-TAB 1: CHATS -->
+          <div id="hub-chats" class="grid grid-cols-1 md:grid-cols-12 gap-4">
+            <div class="md:col-span-5 rounded-2xl paper-card p-3 space-y-1.5 max-h-[540px] overflow-y-auto" id="chatThreadList"></div>
+
+            <div class="md:col-span-7 rounded-2xl paper-card flex flex-col h-[540px] overflow-hidden">
+              <div class="p-4 warm-border-b flex items-center justify-between gap-3 bg-sand/40">
+                <div>
+                  <p id="chatHeaderTitle" class="font-serif font-bold text-base text-espresso">Select a chat</p>
+                  <p id="chatHeaderSub" class="text-[11px] text-umber">Your IRL plans live here</p>
+                </div>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-sageSoft text-sage font-bold">PUBLIC VENUE</span>
+              </div>
+
+              <div id="chatPinnedPlan" class="hidden px-4 py-2.5 bg-ochreSoft/50 warm-border-b flex items-center justify-between gap-2 text-xs">
+                <span id="chatPinnedPlanText" class="text-espresso font-semibold truncate"></span>
+                <a id="chatPinnedDirections" href="#" target="_blank" rel="noopener" class="font-mono text-[11px] font-bold text-ochreDark underline shrink-0">Directions →</a>
+              </div>
+
+              <div id="chatMessagesBox" class="flex-1 p-4 overflow-y-auto space-y-3 bg-parchment/45"></div>
+
+              <div class="p-3 warm-border-t bg-ivory flex items-center gap-2">
+                <button onclick="insertIcebreaker()" title="Smart Icebreaker" class="w-10 h-10 rounded-xl bg-plumSoft hover:bg-plum text-plum hover:text-white flex items-center justify-center transition shrink-0">
+                  <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+                </button>
+                <input id="chatMessageInput" type="text" placeholder="Message..." onkeydown="if(event.key==='Enter') sendThreadMessage()"
+                  class="flex-1 px-3.5 py-2.5 rounded-xl bg-parchment warm-border text-sm text-espresso placeholder-umber/70 focus:outline-none focus:border-ochre" />
+                <button onclick="sendThreadMessage()" class="px-4 h-10 rounded-xl bg-ochre hover:bg-ochreDark text-espresso font-bold text-xs transition shrink-0">
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- HUB SUB-TAB 2: PERKS & PASSES -->
+          <div id="hub-perks" class="hidden space-y-6">
+            <div>
+              <h2 class="font-serif text-xl font-bold text-espresso mb-3">Your Active Passes &amp; Tournament Entries</h2>
+              <div id="myTicketsList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <h2 class="font-serif text-xl font-bold text-espresso">Chennai Partner Perks &amp; Coupons</h2>
+                <span class="text-xs font-mono font-bold text-ochreDark" id="claimedPerkCounter">0 Claimed</span>
+              </div>
+              <div id="perksGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+          </div>
+
+          <!-- HUB SUB-TAB 3: PASSPORT + OPTIONAL GEMINI 3.5 AI -->
+          <div id="hub-passport" class="hidden space-y-5">
+            <div class="rounded-2xl paper-card p-6">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 warm-border-b">
+                <div class="flex items-center gap-4">
+                  <div id="passportAvatar" class="w-16 h-16 rounded-2xl bg-slateBlue/85 flex items-center justify-center font-serif font-extrabold text-2xl text-white shadow-sm">A</div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <h2 id="passportName" class="font-serif text-2xl font-extrabold text-espresso">Aarav</h2>
+                      <span id="passportProTag" class="hidden text-[10px] font-mono px-2 py-0.5 rounded bg-ochreSoft text-espresso font-bold">ESC+ MEMBER</span>
+                    </div>
+                    <p id="passportMeta" class="text-xs text-umber mt-0.5">Adyar · IIT Madras</p>
+                  </div>
+                </div>
+                <button onclick="openModal('modal-pro')" id="passportUpgradeBtn" class="px-4 py-2.5 rounded-xl bg-ochre hover:bg-ochreDark text-espresso font-bold text-xs transition self-start shadow-sm">
+                  Upgrade to ESC+ (₹149/mo)
+                </button>
+              </div>
+
+              <!-- Trust & Activity Metrics -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 py-5 warm-border-b">
+                <div class="p-3.5 rounded-xl bg-parchment warm-border">
+                  <p class="text-[10px] font-mono font-bold text-umber">SHOW-UP SCORE</p>
+                  <p class="font-serif text-2xl font-extrabold text-sage mt-1">98%</p>
+                </div>
+                <div class="p-3.5 rounded-xl bg-parchment warm-border">
+                  <p class="text-[10px] font-mono font-bold text-umber">IRL CHECK-INS</p>
+                  <p id="statCheckins" class="font-serif text-2xl font-extrabold text-espresso mt-1">14</p>
+                </div>
+                <div class="p-3.5 rounded-xl bg-parchment warm-border">
+                  <p class="text-[10px] font-mono font-bold text-umber">ACTIVE PASSES</p>
+                  <p id="statPasses" class="font-serif text-2xl font-extrabold text-slateBlue mt-1">0</p>
+                </div>
+                <div class="p-3.5 rounded-xl bg-parchment warm-border">
+                  <p class="text-[10px] font-mono font-bold text-umber">PERKS SAVED</p>
+                  <p id="statPerks" class="font-serif text-2xl font-extrabold text-ochreDark mt-1">0</p>
+                </div>
+              </div>
+
+              <!-- Profile & Safe-Graph Editor -->
+              <div class="pt-5 space-y-4">
+                <h3 class="font-serif font-bold text-base text-espresso">Edit Chennai Passport &amp; Safe-Graph Preferences</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <label class="text-xs font-semibold text-umber block mb-1">Display Name</label>
+                    <input id="editName" type="text" class="w-full px-3.5 py-2.5 rounded-xl bg-parchment warm-border text-sm text-espresso focus:outline-none focus:border-ochre" />
+                  </div>
+                  <div>
+                    <label class="text-xs font-semibold text-umber block mb-1">Neighborhood / Campus</label>
+                    <select id="editArea" class="w-full px-3.5 py-2.5 rounded-xl bg-parchment warm-border text-sm text-espresso focus:outline-none focus:border-ochre">
+                      <option>Adyar · IIT Madras</option>
+                      <option>Nungambakkam · Loyola</option>
+                      <option>Guindy · Anna University</option>
+                      <option>Besant Nagar</option>
+                      <option>Anna Nagar</option>
+                      <option>Velachery</option>
+                      <option>T. Nagar</option>
+                      <option>Tambaram · MCC</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="text-xs font-semibold text-umber block mb-1">I Identify As (For Spark Safe-Graph)</label>
+                    <select id="editGender" class="w-full px-3.5 py-2.5 rounded-xl bg-parchment warm-border text-sm text-espresso focus:outline-none focus:border-ochre">
+                      <option value="Man">Man</option>
+                      <option value="Woman">Woman</option>
+                      <option value="Non-Binary">Non-Binary</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="text-xs font-semibold text-umber block mb-1">Spark Orientation Preference</label>
+                    <select id="editOrientation" class="w-full px-3.5 py-2.5 rounded-xl bg-parchment warm-border text-sm text-espresso focus:outline-none focus:border-ochre">
+                      <option value="All">Open / Bi / Pan</option>
+                      <option value="Straight">Straight</option>
+                      <option value="Gay">Gay</option>
+                      <option value="Lesbian">Lesbian</option>
+                      <option value="Queer">Queer</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="text-xs font-semibold text-umber block mb-1.5">Community &amp; Vibe Tags</label>
+                  <div id="editIdentityChips" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                  <button onclick="savePassport()" class="px-5 py-2.5 rounded-xl bg-ochre hover:bg-ochreDark text-espresso font-bold text-xs transition shadow-sm">
+                    Save Passport
+                  </button>
+                  <button onclick="resetDemoState()" class="px-4 py-2 rounded-xl bg-sand warm-border text-xs font-semibold text-umber hover:text-crimson transition">
+                    Reset Demo Data
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Optional Live Gemini 3.5 Flash-Lite Engine Panel -->
+            <div class="rounded-2xl paper-card p-5 space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 class="font-serif font-bold text-base text-espresso flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-ochreDark text-[20px]">auto_awesome</span>
+                    Optional Live AI Concierge (Gemini 3.5 Flash-Lite)
+                  </h3>
+                  <p class="text-xs text-umber">ESC runs 100% natively without a key. Add a free Google AI Studio key (stored only in your browser) for live generative plans.</p>
+                </div>
+                <span id="aiModePill" class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-sageSoft text-sage">INSTANT ENGINE</span>
+              </div>
+              <div class="flex flex-col sm:flex-row gap-2">
+                <input id="escGeminiKey" type="password" placeholder="AIza... (optional)"
+                  class="flex-1 px-3.5 py-2 rounded-xl bg-parchment warm-border text-xs text-espresso focus:outline-none focus:border-ochre" />
+                <button onclick="testEscGeminiKey()" id="escTestKeyBtn" class="px-3.5 py-2 rounded-xl bg-sand warm-border text-xs font-bold text-espresso hover:border-ochre">Test Key</button>
+                <button onclick="saveEscGeminiKey()" class="px-4 py-2 rounded-xl bg-espresso text-ivory text-xs font-bold hover:bg-ochreDark hover:text-espresso transition">Save Key</button>
+                <button onclick="clearEscGeminiKey()" class="px-3 py-2 rounded-xl text-xs font-semibold text-umber hover:text-crimson">Clear</button>
+              </div>
+              <p id="escKeyStatus" class="hidden text-xs font-mono"></p>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- DESKTOP RIGHT CONTEXTUAL SIDEBAR (MATCHES MOCKUP!)    -->
+    <!-- ===================================================== -->
+    <aside class="hidden xl:flex flex-col w-80 shrink-0 sticky top-0 h-screen p-5 warm-border-l space-y-4 overflow-y-auto bg-sand/55">
+      <!-- Watching Now Live Widget -->
+      <div onclick="switchTab('arena')" class="p-4 rounded-2xl paper-card hover:border-crimson/50 cursor-pointer transition space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-mono font-bold text-crimson flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-crimson live-dot"></span> WATCHING NOW · <span id="sideViewers">248</span>
+          </span>
+          <span class="text-[10px] font-mono text-umber font-bold" id="sideClock">38:14</span>
+        </div>
+        <div class="flex items-center justify-between text-xs font-bold text-espresso">
+          <span>IITM Streetballers</span>
+          <span class="font-mono px-2 py-0.5 rounded bg-ochreSoft text-espresso" id="sideScore">3 - 2</span>
+          <span>Loyola Lions</span>
+        </div>
+        <p class="text-[11px] text-umber font-medium">Tap to open Live Telecast &amp; Cheer →</p>
+      </div>
+
+      <!-- Instant Vibe Concierge -->
+      <div class="p-4 rounded-2xl paper-card space-y-3">
+        <div class="flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-ochreDark text-[19px]">auto_awesome</span>
+          <span class="font-serif font-bold text-base text-espresso">Instant Vibe Concierge</span>
+        </div>
+        <p class="text-xs text-umber leading-relaxed">Tell ESC your mood and get a real Chennai drop or 3-stop hangout plan instantly.</p>
+        <div class="flex flex-wrap gap-1.5">
+          <button onclick="runConcierge('football')" class="px-2.5 py-1.5 rounded-lg bg-parchment warm-border text-[11px] font-semibold text-espresso hover:border-ochre transition">⚽ Play tonight</button>
+          <button onclick="runConcierge('queer')" class="px-2.5 py-1.5 rounded-lg bg-parchment warm-border text-[11px] font-semibold text-espresso hover:border-plum transition">🏳️‍🌈 Safe hangout</button>
+          <button onclick="runConcierge('coffee')" class="px-2.5 py-1.5 rounded-lg bg-parchment warm-border text-[11px] font-semibold text-espresso hover:border-ochre transition">☕ Chill coffee</button>
+        </div>
+        <div id="conciergeResult" class="hidden p-3 rounded-xl bg-parchment warm-border text-xs text-espresso space-y-1.5 leading-relaxed"></div>
+      </div>
+
+      <!-- Next Up Ticket (With Marina Lighthouse Watermark!) -->
+      <div class="p-4 rounded-2xl paper-card space-y-2 relative overflow-hidden min-h-[115px]">
+        <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-umber flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[14px]">calendar_month</span> Your Next IRL Drop
+        </span>
+        <div id="sideNextTicket" class="text-xs text-umber relative z-10 pr-10">No active drops yet. Join one from Pulse!</div>
+        <!-- Subtle Marina Beach Lighthouse Inline SVG -->
+        <svg class="pointer-events-none select-none absolute bottom-0 right-1 w-24 opacity-30" viewBox="0 0 110 80" fill="none">
+          <path d="M5 72 Q45 64 105 72" stroke="#9C8462" stroke-width="1.2"/>
+          <path d="M78 70 L82 22 H90 L94 70 Z" fill="#C9735B" fill-opacity="0.55" stroke="#7A5A42" stroke-width="1"/>
+          <rect x="81" y="15" width="10" height="7" fill="#E8C068" stroke="#7A5A42" stroke-width="1"/>
+          <path d="M80 15 L86 9 L92 15 Z" fill="#7A5A42"/>
+          <path d="M58 70 C59 56 62 49 65 44" stroke="#6E5A3E" stroke-width="1.4"/>
+          <path d="M65 44 C57 42 53 45 50 48 M65 44 C61 38 66 36 72 38 M65 44 C71 42 74 46 75 50" stroke="#5E7B4C" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <!-- Build Info Card -->
+      <div class="mt-auto p-4 rounded-2xl paper-card text-[11px] text-umber space-y-1">
+        <p class="font-mono text-espresso font-bold flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[14px] text-ochreDark">code</span> ESC V2 · CHENNAI BUILD
+        </p>
+        <p>Zero API-key friction · Hyperlocal IRL Social Engine + Grassroots Arena.</p>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- SINGLE PERSISTENT MOBILE BOTTOM NAV -->
+  <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-30 glass-warm warm-border-t px-2 py-2 flex justify-around">
+    <button onclick="switchTab('pulse')" data-nav="pulse" class="mob-nav flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-[11px] font-semibold">
+      <span class="material-symbols-outlined text-[22px]">explore</span><span>Pulse</span>
+    </button>
+    <button onclick="switchTab('arena')" data-nav="arena" class="mob-nav flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-[11px] font-semibold relative">
+      <span class="w-1.5 h-1.5 rounded-full bg-crimson live-dot absolute top-1 right-2.5"></span>
+      <span class="material-symbols-outlined text-[22px]">trophy</span><span>Arena</span>
+    </button>
+    <button onclick="switchTab('connect')" data-nav="connect" class="mob-nav flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-[11px] font-semibold">
+      <span class="material-symbols-outlined text-[22px]">diversity_3</span><span>Connect</span>
+    </button>
+    <button onclick="switchTab('hub')" data-nav="hub" class="mob-nav flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-[11px] font-semibold">
+      <span class="material-symbols-outlined text-[22px]">chat_bubble</span><span>Hub</span>
+    </button>
+  </nav>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- MODAL: HOST A DROP -->
+  <div id="modal-host" class="fixed inset-0 z-50 hidden items-center justify-center bg-espresso/60 backdrop-blur-sm p-4" onclick="if(event.target===this)closeModal('modal-host')">
+    <div class="w-full max-w-md rounded-2xl bg-ivory warm-border p-6 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h2 class="font-serif text-xl font-extrabold text-espresso">Host a Chennai Drop</h2>
+        <button onclick="closeModal('modal-host')" class="text-umber hover:text-espresso"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div class="space-y-3 text-sm">
+        <div>
+          <label class="text-xs font-semibold text-umber block mb-1">Drop Title</label>
+          <input id="hostTitle" type="text" placeholder="e.g., 5v5 Turf Football or Beginner Chess Blitz" class="w-full px-3.5 py-2.5 rounded-xl bg-parchment warm-border text-espresso focus:outline-none focus:border-ochre" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-semibold text-umber block mb-1">Category</label>
+            <select id="hostCategory" class="w-full px-3 py-2.5 rounded-xl bg-parchment warm-border text-espresso">
+              <option value="Sports">Sports &amp; Games</option>
+              <option value="Hobbies">Hobbies &amp; Craft</option>
+              <option value="LGBTQ+ Safe">LGBTQ+ Safe Space</option>
+              <option value="Women-Only">Women-Only</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-umber block mb-1">Public Venue / Area</label>
+            <input id="hostArea" type="text" placeholder="e.g., Besant Nagar" class="w-full px-3.5 py-2.5 rounded-xl bg-parchment warm-border text-espresso focus:outline-none focus:border-ochre" />
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="text-xs font-semibold text-umber block mb-1">When</label>
+            <input id="hostTime" type="text" value="Tonight, 7:00 PM" class="w-full px-3 py-2.5 rounded-xl bg-parchment warm-border text-espresso text-xs" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-umber block mb-1">Max Spots</label>
+            <input id="hostMax" type="number" value="10" min="2" max="50" class="w-full px-3 py-2.5 rounded-xl bg-parchment warm-border text-espresso text-xs" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-umber block mb-1">Entry Fee (₹)</label>
+            <input id="hostFee" type="number" value="0" min="0" max="5000" class="w-full px-3 py-2.5 rounded-xl bg-parchment warm-border text-espresso text-xs" />
+          </div>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-umber block mb-1">Inclusivity / Skill Tag</label>
+          <select id="hostTag" class="w-full px-3 py-2.5 rounded-xl bg-parchment warm-border text-espresso">
+            <option>Beginners Welcome</option>
+            <option>LGBTQ+ Friendly</option>
+            <option>Competitive</option>
+            <option>Women-Only Safe Space</option>
+            <option>Bring Your Gear</option>
+          </select>
+        </div>
+        <button onclick="submitHostDrop()" class="w-full py-3 rounded-xl bg-ochre hover:bg-ochreDark text-espresso font-bold text-sm transition mt-2 shadow-sm">
+          Publish Drop Live
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SMART HANGOUT PLAN -->
+  <div id="modal-plan" class="fixed inset-0 z-50 hidden items-center justify-center bg-espresso/60 backdrop-blur-sm p-4" onclick="if(event.target===this)closeModal('modal-plan')">
+    <div class="w-full max-w-md rounded-2xl bg-ivory warm-border p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="text-[10px] font-mono uppercase text-plum font-bold">AI Concierge · Public Venue Plan</span>
+          <h2 id="planModalTitle" class="font-serif text-xl font-extrabold text-espresso mt-0.5">Hangout Plan</h2>
+        </div>
+        <button onclick="closeModal('modal-plan')" class="text-umber hover:text-espresso"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <p id="planModalReason" class="text-xs text-espresso bg-parchment p-3.5 rounded-xl warm-border leading-relaxed"></p>
+      <div id="planModalSteps" class="space-y-2.5"></div>
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeModal('modal-plan')" class="flex-1 py-2.5 rounded-xl bg-sand warm-border text-xs font-bold text-umber">Close</button>
+        <button id="planConfirmBtn" class="flex-1 py-2.5 rounded-xl bg-ochre hover:bg-ochreDark text-espresso font-bold text-xs transition shadow-sm">Send Plan &amp; Chat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: TOURNAMENT REGISTRATION -->
+  <div id="modal-tournament" class="fixed inset-0 z-50 hidden items-center justify-center bg-espresso/60 backdrop-blur-sm p-4" onclick="if(event.target===this)closeModal('modal-tournament')">
+    <div class="w-full max-w-md rounded-2xl bg-ivory warm-border p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h2 id="tournModalTitle" class="font-serif text-xl font-extrabold text-espresso">Join Competition</h2>
+        <button onclick="closeModal('modal-tournament')" class="text-umber hover:text-espresso"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div id="tournModalDetails" class="p-3.5 rounded-xl bg-parchment warm-border text-xs space-y-1.5"></div>
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-umber block mb-1">Registration Type</label>
+          <select id="tournRegType" class="w-full px-3 py-2.5 rounded-xl bg-parchment warm-border text-sm text-espresso">
+            <option value="squad">Register My Squad / Team</option>
+            <option value="freeagent">Join as Solo Free Agent (Auto-Match Team)</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-umber block mb-1">Team Name or Player Handle</label>
+          <input id="tournTeamInput" type="text" placeholder="e.g., Adyar Strikers or @aarav" class="w-full px-3.5 py-2.5 rounded-xl bg-parchment warm-border text-sm text-espresso" />
+        </div>
+      </div>
+      <button onclick="confirmTournamentJoin()" class="w-full py-3 rounded-xl bg-ochre hover:bg-ochreDark text-espresso font-bold text-sm transition shadow-sm">
+        Confirm Entry &amp; Get Pass
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: ESC+ MEMBERSHIP -->
+  <div id="modal-pro" class="fixed inset-0 z-50 hidden items-center justify-center bg-espresso/60 backdrop-blur-sm p-4" onclick="if(event.target===this)closeModal('modal-pro')">
+    <div class="w-full max-w-sm rounded-2xl bg-ivory warm-border p-6 space-y-5 text-center shadow-2xl">
+      <div class="w-12 h-12 mx-auto rounded-2xl bg-ochreSoft text-ochreDark flex items-center justify-center">
+        <span class="material-symbols-outlined text-2xl">bolt</span>
+      </div>
+      <div>
+        <h2 class="font-serif text-2xl font-extrabold text-espresso">ESC+ Chennai</h2>
+        <p class="text-xs text-umber mt-1">Zero booking fees, scout analytics &amp; priority perks</p>
+      </div>
+      <ul class="text-left text-xs space-y-2.5 bg-parchment p-4 rounded-xl warm-border text-espresso">
+        <li class="flex items-center gap-2"><span class="text-sage font-bold">✓</span> 0% platform fee on all turf &amp; tournament entries</li>
+        <li class="flex items-center gap-2"><span class="text-sage font-bold">✓</span> Verified Talent Scout stat profile in The Arena</li>
+        <li class="flex items-center gap-2"><span class="text-sage font-bold">✓</span> Unlimited Spark connections &amp; Smart AI Plans</li>
+        <li class="flex items-center gap-2"><span class="text-sage font-bold">✓</span> Priority partner café &amp; venue discounts</li>
+      </ul>
+      <button onclick="activatePro()" class="w-full py-3 rounded-xl bg-ochre hover:bg-ochreDark text-espresso font-bold text-sm transition shadow-sm">
+        Activate ESC+ — ₹149/mo (Demo)
+      </button>
+      <button onclick="closeModal('modal-pro')" class="text-xs text-umber hover:text-espresso">Maybe later</button>
+    </div>
+  </div>
+
+  <!-- MODAL: TRUST & SAFETY ARCHITECTURE -->
+  <div id="modal-safety" class="fixed inset-0 z-50 hidden items-center justify-center bg-espresso/60 backdrop-blur-sm p-4" onclick="if(event.target===this)closeModal('modal-safety')">
+    <div class="w-full max-w-md rounded-2xl bg-ivory warm-border p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between warm-border-b pb-3">
+        <h2 class="font-serif text-xl font-extrabold text-espresso flex items-center gap-2">
+          <span class="material-symbols-outlined text-sage">verified_user</span> Trust &amp; Safety Model
+        </h2>
+        <button onclick="closeModal('modal-safety')" class="text-umber hover:text-espresso"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div class="space-y-2.5 text-xs text-espresso leading-relaxed">
+        <div class="p-3 rounded-xl bg-parchment warm-border">
+          <p class="font-bold mb-0.5">1. Anti-Flake Show-Up Score</p>
+          <p class="text-umber">Every user builds a verified Show-Up Score via public venue check-ins, solving no-shows and ghosting.</p>
+        </div>
+        <div class="p-3 rounded-xl bg-parchment warm-border">
+          <p class="font-bold mb-0.5">2. Public Venues Only + Group-First Option</p>
+          <p class="text-umber">Smart Plans route exclusively to verified public cafés, turfs, and parks—never private addresses.</p>
+        </div>
+        <div class="p-3 rounded-xl bg-parchment warm-border">
+          <p class="font-bold mb-0.5">3. Bidirectional Inclusive Safe-Graph</p>
+          <p class="text-umber">Spark mode enforces mutual gender/orientation compatibility with dedicated LGBTQ+ &amp; Women-Only safe spaces.</p>
+        </div>
+      </div>
+      <button onclick="closeModal('modal-safety')" class="w-full py-2.5 rounded-xl bg-espresso text-ivory font-bold text-xs">Got It</button>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toastContainer" class="fixed bottom-20 lg:bottom-6 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+  <script>
+    // =========================================================================
+    // CONSTANTS, UTILITIES & XSS SAFETY
+    // =========================================================================
+    const STORAGE_KEY = 'esc_chennai_heritage_v2';
+    const GEMINI_MODEL = 'gemini-3.5-flash-lite';
+    const IDENTITY_TAGS = ['LGBTQ+ Friendly', 'Queer', 'Straight', 'Gay', 'Lesbian', 'Bisexual', 'Non-Binary', 'Women', 'Men', 'Introvert', 'Extrovert'];
+
+    let escApiKey = localStorage.getItem('esc_gemini_key') || '';
+    let mapInstance = null;
+    let mapLayer = null;
+
+    function escapeHTML(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function showToast(message, tone = 'sage') {
+      const container = document.getElementById('toastContainer');
+      const dotColors = { sage: 'bg-sage', ochre: 'bg-ochre', plum: 'bg-plum', crimson: 'bg-crimson' };
+      const el = document.createElement('div');
+      el.className = 'pointer-events-auto px-4 py-3 rounded-xl bg-espresso text-ivory text-xs font-semibold shadow-2xl flex items-center gap-2 transition-all border border-ochre/30';
+      el.innerHTML = `<span class="w-2 h-2 rounded-full ${dotColors[tone] || dotColors.sage}"></span><span>${escapeHTML(message)}</span>`;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(6px)';
+        setTimeout(() => el.remove(), 250);
+      }, 3000);
+    }
+
+    function openModal(id) {
+      const m = document.getElementById(id);
+      if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+    }
+    function closeModal(id) {
+      const m = document.getElementById(id);
+      if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+    }
+
+    // =========================================================================
+    // OPTIONAL GEMINI 3.5 FLASH-LITE CLIENT
+    // =========================================================================
+    async function callGeminiOptional(prompt, maxTokens = 260) {
+      if (!escApiKey) return null;
+      try {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(escApiKey)}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ role: 'user', parts: [{ text: prompt }] }],
+              generationConfig: { maxOutputTokens: maxTokens, thinkingConfig: { thinkingLevel: 'minimal' } }
+            })
+          }
+        );
+        if (!res.ok) return null;
+        const data = await res.json();
+        const parts = data.candidates?.[0]?.content?.parts || [];
+        return parts.filter(p => p.text && !p.thought).map(p => p.text).join('').trim() || null;
+      } catch {
+        return null;
+      }
+    }
+
+    async function testEscGeminiKey() {
+      const val = document.getElementById('escGeminiKey').value.trim();
+      const st = document.getElementById('escKeyStatus');
+      const btn = document.getElementById('escTestKeyBtn');
+      st.classList.remove('hidden');
+      if (!val) { st.className = 'text-xs font-mono text-crimson'; st.textContent = '✗ Paste a Google AI Studio key first.'; return; }
+      btn.disabled = true; btn.textContent = 'Testing...';
+      try {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(val)}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ role: 'user', parts: [{ text: 'Reply: OK' }] }],
+              generationConfig: { maxOutputTokens: 16, thinkingConfig: { thinkingLevel: 'minimal' } }
+            })
+          }
+        );
+        if (res.ok) {
+          st.className = 'text-xs font-mono text-sage';
+          st.textContent = `✓ Connected cleanly to ${GEMINI_MODEL}!`;
+        } else {
+          const e = await res.json().catch(() => ({}));
+          st.className = 'text-xs font-mono text-crimson';
+          st.textContent = `✗ HTTP ${res.status}: ${e.error?.message || 'Key rejected'}`;
+        }
+      } catch {
+        st.className = 'text-xs font-mono text-crimson';
+        st.textContent = '✗ Network error reaching Gemini API.';
+      } finally {
+        btn.disabled = false; btn.textContent = 'Test Key';
+      }
+    }
+
+    function saveEscGeminiKey() {
+      escApiKey = document.getElementById('escGeminiKey').value.trim();
+      localStorage.setItem('esc_gemini_key', escApiKey);
+      updateAiPill();
+      showToast(escApiKey ? `Live ${GEMINI_MODEL} enabled!` : 'Switched to Instant Engine', 'sage');
+    }
+
+    function clearEscGeminiKey() {
+      escApiKey = '';
+      localStorage.removeItem('esc_gemini_key');
+      document.getElementById('escGeminiKey').value = '';
+      document.getElementById('escKeyStatus').classList.add('hidden');
+      updateAiPill();
+      showToast('Using offline Instant Engine', 'ochre');
+    }
+
+    function updateAiPill() {
+      const pill = document.getElementById('aiModePill');
+      if (!pill) return;
+      pill.textContent = escApiKey ? 'GEMINI 3.5 LIVE' : 'INSTANT ENGINE';
+      pill.className = escApiKey
+        ? 'text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-ochreSoft text-espresso'
+        : 'text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-sageSoft text-sage';
+    }
+
+    // =========================================================================
+    // SEED DATA (CHENNAI HYPERLOCAL — NOV/DEC 2026)
+    // =========================================================================
+    const DEFAULT_STATE = {
+      user: {
+        name: 'Aarav',
+        area: 'Adyar · IIT Madras',
+        gender: 'Man',
+        orientation: 'All',
+        identity: ['LGBTQ+ Friendly', 'Extrovert'],
+        isPro: false,
+        checkins: 14
+      },
+      pulseFilter: 'All',
+      pulseMode: 'list',
+      connectMode: 'friends',
+      connectIdentityFilter: 'All',
+      hubSubTab: 'chats',
+      activeChatId: 'chat-maya',
+      activeLiveIdx: 0,
+      events: [
+        { id: 'ev-1', title: '5v5 Floodlit Turf Football', category: 'Sports', area: 'T. Nagar', time: 'Tonight, 7:30 PM', joined: 7, max: 10, fee: 150, tag: 'Beginners Welcome', host: 'Karthik', lat: 13.0418, lng: 80.2341, userJoined: false },
+        { id: 'ev-2', title: 'Golden Hour Skate & Longboard Jam', category: 'Sports', area: 'Besant Nagar', time: 'Tomorrow, 5:15 PM', joined: 11, max: 16, fee: 0, tag: 'Bring Your Gear', host: 'Sanjay', lat: 13.0002, lng: 80.2707, userJoined: false },
+        { id: 'ev-3', title: 'Queer Book & Filter Coffee Circle', category: 'LGBTQ+ Safe', area: 'Gopalapuram (Amethyst)', time: 'Sat, 4:30 PM', joined: 8, max: 12, fee: 0, tag: 'LGBTQ+ Safe Space', host: 'Meera & Dev', lat: 13.0520, lng: 80.2540, userJoined: false },
+        { id: 'ev-4', title: 'Madras Rapid Chess & Chai Night', category: 'Hobbies', area: 'Mylapore', time: 'Fri, 6:30 PM', joined: 14, max: 16, fee: 80, tag: 'All ELO Levels', host: 'Rohan', lat: 13.0337, lng: 80.2778, userJoined: false },
+        { id: 'ev-5', title: 'Women-Only Sunrise 5K & Dosa Run', category: 'Women-Only', area: 'Elliot’s Beach', time: 'Sun, 6:00 AM', joined: 19, max: 25, fee: 0, tag: 'Women-Only Safe Space', host: 'Ananya', lat: 12.9988, lng: 80.2716, userJoined: false },
+        { id: 'ev-6', title: 'Indie Synth, Guitar & Open Mic Jam', category: 'Hobbies', area: 'Anna Nagar', time: 'Sat, 7:00 PM', joined: 6, max: 10, fee: 100, tag: 'LGBTQ+ Friendly', host: 'Arjun', lat: 13.0850, lng: 80.2101, userJoined: false }
+      ],
+      tournaments: [
+        { id: 't-1', name: 'Chennai Street 5v5 Turf Cup', sport: 'Football', venue: 'Velocity Turf, Velachery', date: 'Nov 29', fee: 800, prize: '₹25,000 + Scout Trial', slotsLeft: 3, maxSlots: 16, lat: 12.9941, lng: 80.2190, registered: false },
+        { id: 't-2', name: 'Marina Skate Open — Best Trick', sport: 'Skateboarding', venue: 'Besant Nagar Promenade', date: 'Dec 6', fee: 200, prize: '₹12,000 + Pro Deck', slotsLeft: 9, maxSlots: 32, lat: 13.0005, lng: 80.2725, registered: false },
+        { id: 't-3', name: 'Madras Blitz Chess Championship', sport: 'Chess', venue: 'Writer’s Café, Gopalapuram', date: 'Dec 13', fee: 150, prize: '₹10,000 + FIDE Mentorship', slotsLeft: 5, maxSlots: 40, lat: 13.0504, lng: 80.2561, registered: false }
+      ],
+      teams: [
+        { rank: 1, name: 'IITM Streetballers', area: 'Adyar', sport: 'Football', w: 9, l: 1, pts: 27 },
+        { rank: 2, name: 'Loyola Lions', area: 'Nungambakkam', sport: 'Football', w: 8, l: 2, pts: 24 },
+        { rank: 3, name: 'Besant Boarders', area: 'Besant Nagar', sport: 'Skate', w: 7, l: 1, pts: 22 },
+        { rank: 4, name: 'Mylapore Gambits', area: 'Mylapore', sport: 'Chess', w: 11, l: 3, pts: 21 },
+        { rank: 5, name: 'Anna Nagar Phantoms', area: 'Anna Nagar', sport: 'Football', w: 6, l: 3, pts: 18 }
+      ],
+      talents: [
+        { id: 'tal-1', name: 'Karthik V.', team: 'IITM Streetballers', stat: '14 Goals · 6 Assists', badge: 'Scout Watchlist', sport: 'Football' },
+        { id: 'tal-2', name: 'Nivedita R.', team: 'Mylapore Gambits', stat: '1980 Blitz ELO', badge: 'Undefeated Streak', sport: 'Chess' },
+        { id: 'tal-3', name: 'Zain S.', team: 'Besant Boarders', stat: '9.4 Avg Trick Score', badge: 'Street MVP', sport: 'Skate' }
+      ],
+      people: [
+        { id: 'p-maya', mode: 'friends', gender: 'Woman', interestedIn: ['Woman', 'Non-Binary'], name: 'Maya', area: 'Adyar · IITM', reliability: 99, tags: ['Queer', 'LGBTQ+ Friendly', 'Women', 'Introvert'], interests: ['Photography', 'Filter Coffee', 'Skate'], planIdea: 'Golden hour street photo walk at Mylapore + Writer’s Café', bio: 'Film photography & slow weekends. Looking for creative walk buddies.' },
+        { id: 'p-arjun', mode: 'friends', gender: 'Man', interestedIn: ['Woman'], name: 'Arjun', area: 'Guindy · Anna Univ', reliability: 96, tags: ['Straight', 'LGBTQ+ Friendly', 'Men', 'Extrovert'], interests: ['Football', 'Guitar', 'Street Food'], planIdea: '7 PM turf match at T. Nagar followed by Midnight Kothu Parotta', bio: 'Always down for a last-minute turf slot or acoustic jam.' },
+        { id: 'p-dev', mode: 'spark', gender: 'Man', interestedIn: ['Man', 'Non-Binary'], name: 'Dev', area: 'Nungambakkam', reliability: 97, tags: ['Gay', 'Queer', 'LGBTQ+ Friendly', 'Men', 'Extrovert'], interests: ['Indie Cinema', 'Chess', 'Specialty Coffee'], planIdea: 'Amethyst courtyard coffee + rapid chess game + vintage bookstore', bio: 'Design nerd, enthusiastic at chess. Real conversations only.' },
+        { id: 'p-riya', mode: 'spark', gender: 'Woman', interestedIn: ['Woman', 'Non-Binary'], name: 'Riya', area: 'Besant Nagar', reliability: 100, tags: ['Lesbian', 'Queer', 'LGBTQ+ Friendly', 'Women', 'Introvert'], interests: ['Surfing', 'Books', 'Art Galleries'], planIdea: 'Morning surf watch at Kovalam + iced latte + indie gallery hop', bio: 'Quiet beaches, loud playlists, and zero mindless swiping.' },
+        { id: 'p-sam', mode: 'spark', gender: 'Non-Binary', interestedIn: ['Man', 'Woman', 'Non-Binary'], name: 'Sam', area: 'Anna Nagar', reliability: 95, tags: ['Non-Binary', 'Bisexual', 'Queer', 'LGBTQ+ Friendly', 'Introvert'], interests: ['Board Games', 'Anime', 'Ramen'], planIdea: 'Catan night + ramen crawl in Nungambakkam', bio: 'Will beat you at Catan and then buy you dessert.' },
+        { id: 'p-ananya', mode: 'spark', gender: 'Woman', interestedIn: ['Man', 'Woman'], name: 'Ananya', area: 'Teynampet · Stella', reliability: 98, tags: ['Straight', 'LGBTQ+ Friendly', 'Women', 'Extrovert'], interests: ['Running', 'Dance', 'Open Mic'], planIdea: 'Sunset beach walk + open mic night + artisanal gelato', bio: 'High energy, zero flakiness. Let’s actually meet IRL.' },
+        { id: 'c-skate', mode: 'crews', gender: 'Group', interestedIn: ['Man', 'Woman', 'Non-Binary'], name: 'Besant Boarders Crew', area: 'Besant Nagar · 6 members', reliability: 97, tags: ['LGBTQ+ Friendly', 'Extrovert'], interests: ['Skateboarding', 'Filming', 'Streetwear'], planIdea: 'Saturday sunset skate session + rooftop chai debrief', bio: 'Open crew for skaters & videographers of all skill levels.' },
+        { id: 'c-chess', mode: 'crews', gender: 'Group', interestedIn: ['Man', 'Woman', 'Non-Binary'], name: 'Madras Chess Collective', area: 'Mylapore · 12 members', reliability: 99, tags: ['LGBTQ+ Friendly', 'Introvert', 'Queer'], interests: ['Chess', 'Filter Coffee', 'Strategy'], planIdea: 'Friday 5+0 Blitz bracket at Writer’s Café', bio: 'Casual boards, serious banter. Beginners very welcome.' }
+      ],
+      perks: [
+        { id: 'perk-brew', brand: 'The Brew Room', area: 'Nungambakkam', deal: '25% OFF Group Filter Coffee', left: 14, sponsor: true, lat: 13.0569, lng: 80.2450 },
+        { id: 'perk-decathlon', brand: 'Decathlon OMR', area: 'Perungudi', deal: '₹300 OFF Turf Boots & Gear', left: 22, sponsor: true, lat: 12.9654, lng: 80.2461 },
+        { id: 'perk-writers', brand: 'Writer’s Café', area: 'Gopalapuram', deal: 'FREE Espresso on Check-In', left: 9, sponsor: false, lat: 13.0504, lng: 80.2561 },
+        { id: 'perk-velocity', brand: 'Velocity Sports Turf', area: 'Velachery', deal: '₹400 OFF 1-Hr Night Booking', left: 6, sponsor: true, lat: 12.9941, lng: 80.2190 }
+      ],
+      claimedPerks: {},
+      tickets: [],
+      chats: {
+        'chat-maya': {
+          id: 'chat-maya',
+          name: 'Maya',
+          sub: 'Friends · Adyar',
+          pinnedPlan: 'Mylapore Photo Walk → Writer’s Café',
+          lat: 13.0337, lng: 80.2778,
+          messages: [
+            { from: 'them', text: 'Hey! Saw you’re around Adyar too. Still up for the Mylapore golden hour walk this Saturday?', time: '2:14 PM' }
+          ]
+        },
+        'chat-crew': {
+          id: 'chat-crew',
+          name: 'Madras Chess Collective',
+          sub: 'Crew Chat · 12 members',
+          pinnedPlan: 'Friday Blitz Bracket · 6:30 PM',
+          lat: 13.0504, lng: 80.2561,
+          messages: [
+            { from: 'them', sender: 'Rohan', text: 'Boards are reserved near the courtyard! Who is bringing the extra clock?', time: '1:40 PM' }
+          ]
+        }
+      }
+    };
+
+    const LIVE_MATCHES = [
+      {
+        tournament: 'Chennai Turf Cup · Final',
+        venue: 'T. Nagar Arena Turf',
+        home: { name: 'IITM Streetballers', badge: 'IS', area: 'Adyar', score: 3 },
+        away: { name: 'Loyola Lions', badge: 'LL', area: 'Nungambakkam', score: 2 },
+        viewers: 248, cheers: 84, minutes: 38, seconds: 14,
+        sponsor: 'Broadcast powered by Decathlon OMR — Flat ₹300 off turf boots for viewers',
+        commentary: [
+          "⚡ 38' — Karthik (IITM) nutmegs defender on the right wing, crowd goes wild!",
+          "🔥 39' — Huge diving save by Loyola’s keeper off a top-corner volley!",
+          "📢 Scout Alert: Chennai youth academy scout spotted watching from the sideline.",
+          "⚡ 40' — Fast counter-attack by Loyola Lions — corner kick awarded!"
+        ],
+        chat: [
+          { user: 'priya_k', text: 'Karthik is unreal today 🔥' },
+          { user: 'vikram_99', text: 'Loyola defense needs to wake up!!' },
+          { user: 'chennai_scout', text: 'Tracking #7 from IITM, serious pace.' }
+        ]
+      },
+      {
+        tournament: 'Madras Rapid Chess · Semifinal',
+        venue: 'Writer’s Café Courtyard',
+        home: { name: 'Mylapore Gambits', badge: 'MG', area: 'Mylapore', score: 2 },
+        away: { name: 'Adyar Knights', badge: 'AK', area: 'Adyar', score: 2 },
+        viewers: 134, cheers: 51, minutes: 11, seconds: 42,
+        sponsor: 'Stream sponsored by Writer’s Café — Free Espresso for live viewers checking in today',
+        commentary: [
+          "♟️ Move 28 — Nivedita sacrifices the rook on f7! Brilliant tactical shot!",
+          "⏱️ Time scramble! Both players under 90 seconds on the clock.",
+          "🔥 Crowd packed three rows deep at Writer’s Café watching Board 1!"
+        ],
+        chat: [
+          { user: 'blitz_sam', text: 'Rxf7!! No way she saw that in 10 seconds 🤯' },
+          { user: 'rohan_m', text: 'Nivedita is easily 2100 strength' }
+        ]
+      }
+    ];
+
+    let state = loadState();
+    let selectedTournamentId = null;
+    let commentaryIndex = 0;
+
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) return JSON.parse(saved);
+      } catch { /* ignore */ }
+      return JSON.parse(JSON.stringify(DEFAULT_STATE));
+    }
+
+    function saveState() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch { /* ignore */ }
+    }
+
+    function resetDemoState() {
+      localStorage.removeItem(STORAGE_KEY);
+      state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+      saveState();
+      renderAll();
+      showToast('Demo state reset cleanly!', 'sage');
+    }
+
+    // =========================================================================
+    // NAVIGATION
+    // =========================================================================
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+      const target = document.getElementById(`view-${tab}`);
+      if (target) target.classList.add('active');
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        const active = btn.dataset.nav === tab;
+        btn.className = `nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+          active ? 'bg-ochreSoft/85 text-espresso warm-border border-ochre/40 shadow-sm' : 'text-umber hover:text-espresso hover:bg-ivory/70'
+        }`;
+      });
+      document.querySelectorAll('.mob-nav').forEach(btn => {
+        const active = btn.dataset.nav === tab;
+        btn.className = `mob-nav flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-[11px] font-semibold relative ${
+          active ? 'text-ochreDark font-bold' : 'text-umber'
+        }`;
+      });
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (tab === 'hub') renderHub();
+      if (tab === 'pulse' && state.pulseMode === 'map' && mapInstance) {
+        setTimeout(() => mapInstance.invalidateSize(), 100);
+      }
+    }
+
+    // =========================================================================
+    // TAB 1: PULSE (DROPS + INTERACTIVE LEAFLET VOYAGER MAP)
+    // =========================================================================
+    function renderPulseFilters() {
+      const cats = ['All', 'Sports', 'Hobbies', 'LGBTQ+ Safe', 'Women-Only', 'Free'];
+      document.getElementById('pulseFilters').innerHTML = cats.map(c => {
+        const active = state.pulseFilter === c;
+        return `<button onclick="setPulseFilter('${c}')" class="px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition ${
+          active ? 'bg-ochre text-espresso font-bold shadow-sm' : 'bg-ivory warm-border text-umber hover:text-espresso hover:border-ochre'
+        }">${c}</button>`;
+      }).join('');
+    }
+
+    function setPulseFilter(cat) {
+      state.pulseFilter = cat;
+      saveState();
+      renderPulseFilters();
+      renderEvents();
+    }
+
+    function setPulseMode(mode) {
+      state.pulseMode = mode;
+      const isList = mode === 'list';
+      document.getElementById('pulseListContainer').classList.toggle('hidden', !isList);
+      document.getElementById('pulseMapContainer').classList.toggle('hidden', isList);
+      document.getElementById('btn-pulse-list').className = `px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${isList ? 'bg-espresso text-ivory' : 'text-umber hover:text-espresso'}`;
+      document.getElementById('btn-pulse-map').className = `px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${!isList ? 'bg-espresso text-ivory' : 'text-umber hover:text-espresso'}`;
+      if (!isList) {
+        initLeafletMap();
+        renderMapPins();
+      }
+    }
+
+    function initLeafletMap() {
+      if (!window.L) return;
+      if (!mapInstance) {
+        mapInstance = L.map('chennai-leaflet-map', { zoomControl: true }).setView([13.045, 80.248], 12);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; OpenStreetMap &amp; CARTO',
+          maxZoom: 18
+        }).addTo(mapInstance);
+        mapLayer = L.layerGroup().addTo(mapInstance);
+      }
+      setTimeout(() => mapInstance.invalidateSize(), 80);
+    }
+
+    function renderLeafletMarkers() {
+      if (!mapLayer || !window.L) return;
+      mapLayer.clearLayers();
+
+      getFilteredEvents().forEach(ev => {
+        const bg = ev.category === 'LGBTQ+ Safe' ? '#7348C9' : ev.category === 'Sports' ? '#2B7A4B' : '#DFA436';
+        const emoji = ev.category === 'LGBTQ+ Safe' ? '🏳️‍🌈' : ev.category === 'Sports' ? '⚽' : '♟️';
+        const icon = L.divIcon({ className: '', html: `<div class="esc-pin" style="background:${bg}">${emoji}</div>`, iconSize: [34, 34] });
+        L.marker([ev.lat, ev.lng], { icon }).addTo(mapLayer).bindPopup(
+          `<div style="min-width:170px">
+            <b style="font-size:13px">${escapeHTML(ev.title)}</b><br/>
+            <span style="color:#6B5E50;font-size:11px">${escapeHTML(ev.area)} · ${escapeHTML(ev.time)}</span><br/>
+            <button onclick="toggleJoinEvent('${ev.id}')" style="margin-top:7px;background:#DFA436;color:#261E16;font-weight:700;padding:4px 10px;border-radius:8px;font-size:11px">${ev.userJoined ? '✓ Joined' : 'Join Drop'}</button>
+          </div>`
+        );
+      });
+
+      state.tournaments.forEach(t => {
+        const icon = L.divIcon({ className: '', html: `<div class="esc-pin" style="background:#D63B47">🏆</div>`, iconSize: [34, 34] });
+        L.marker([t.lat, t.lng], { icon }).addTo(mapLayer).bindPopup(
+          `<b>🏆 ${escapeHTML(t.name)}</b><br/><span style="color:#6B5E50;font-size:11px">Prize: ${escapeHTML(t.prize)}</span><br/>
+           <button onclick="switchTab('arena')" style="margin-top:6px;background:#261E16;color:#FFFDF8;font-weight:700;padding:4px 10px;border-radius:8px;font-size:11px">Open Arena →</button>`
+        );
+      });
+
+      state.perks.forEach(p => {
+        const icon = L.divIcon({ className: '', html: `<div class="esc-pin" style="background:#C58A21">🎁</div>`, iconSize: [34, 34] });
+        L.marker([p.lat, p.lng], { icon }).addTo(mapLayer).bindPopup(
+          `<b>${escapeHTML(p.brand)}</b><br/><span style="color:#C58A21;font-weight:700;font-size:11px">${escapeHTML(p.deal)}</span><br/>
+           <button onclick="claimPerk('${p.id}')" style="margin-top:6px;background:#DFA436;color:#261E16;font-weight:700;padding:4px 10px;border-radius:8px;font-size:11px">Claim Perk</button>`
+        );
+      });
+    }
+
+    function getFilteredEvents() {
+      const q = (document.getElementById('pulseSearch')?.value || '').trim().toLowerCase();
+      return state.events.filter(ev => {
+        const matchCat = state.pulseFilter === 'All' || (state.pulseFilter === 'Free' ? ev.fee === 0 : ev.category === state.pulseFilter);
+        const matchQuery = !q || (ev.title + ' ' + ev.area + ' ' + ev.category + ' ' + ev.tag).toLowerCase().includes(q) || (q === 'free' && ev.fee === 0);
+        return matchCat && matchQuery;
+      });
+    }
+
+    function renderEvents() {
+      const list = getFilteredEvents();
+      document.getElementById('badge-events').textContent = state.events.length;
+      const brewPerk = state.perks.find(p => p.id === 'perk-brew');
+      if (brewPerk) document.getElementById('brewPerksLeft').textContent = brewPerk.left;
+
+      const container = document.getElementById('pulseListContainer');
+      if (!list.length) {
+        container.innerHTML = `<div class="col-span-full p-8 rounded-2xl paper-card text-center space-y-2">
+          <p class="font-serif font-bold text-lg text-espresso">No Chennai drops match that filter yet</p>
+          <p class="text-xs text-umber">Host one in 10 seconds and invite players nearby.</p>
+          <button onclick="openModal('modal-host')" class="mt-2 px-4 py-2 rounded-xl bg-ochre text-espresso font-bold text-xs">Host a Drop</button>
+        </div>`;
+        renderMapPins();
+        return;
+      }
+
+      container.innerHTML = list.map(ev => {
+        const spotsLeft = Math.max(0, ev.max - ev.joined);
+        const catBadge = ev.category === 'LGBTQ+ Safe'
+          ? 'bg-plumSoft text-plum'
+          : ev.category === 'Women-Only'
+            ? 'bg-rose-100 text-rose-700'
+            : ev.category === 'Sports'
+              ? 'bg-sageSoft text-sage'
+              : 'bg-ochreSoft/80 text-espresso';
+
+        return `
+          <article class="p-5 rounded-2xl paper-card hover:border-ochre/70 transition flex flex-col justify-between gap-4">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-md font-bold ${catBadge}">${escapeHTML(ev.category)}</span>
+                <span class="text-xs font-mono font-bold ${ev.fee === 0 ? 'text-sage' : 'text-espresso'}">${ev.fee === 0 ? 'FREE' : '₹' + ev.fee}</span>
+              </div>
+              <div>
+                <h3 class="font-serif font-bold text-lg text-espresso leading-snug">${escapeHTML(ev.title)}</h3>
+                <p class="text-xs text-umber mt-1 flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[15px]">location_on</span>${escapeHTML(ev.area)} · ${escapeHTML(ev.time)}
+                </p>
+              </div>
+              <div class="flex flex-wrap items-center gap-2 text-[11px] pt-0.5">
+                <span class="px-2.5 py-0.5 rounded-md bg-sand/90 warm-border text-espresso font-medium">${escapeHTML(ev.tag)}</span>
+                <span class="text-umber">Host: ${escapeHTML(ev.host)}</span>
+              </div>
+            </div>
+
+            <div class="pt-3 warm-border-t flex items-center justify-between gap-3">
+              <div class="text-xs font-mono">
+                <span class="text-espresso font-bold">${ev.joined}/${ev.max}</span>
+                <span class="text-umber"> · ${spotsLeft > 0 ? spotsLeft + ' left' : 'Full'}</span>
+              </div>
+              <button onclick="toggleJoinEvent('${ev.id}')" class="px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm ${
+                ev.userJoined
+                  ? 'bg-sageSoft text-sage border border-sage/35'
+                  : 'bg-ochre hover:bg-ochreDark text-espresso'
+              }">
+                ${ev.userJoined ? '✓ Joined' : 'Join Drop'}
+              </button>
+            </div>
+          </article>
+        `;
+      }).join('');
+      renderMapPins();
+    }
+
+    function renderMapPins() {
+      const container = document.getElementById('mapPinList');
+      if (container) {
+        container.innerHTML = getFilteredEvents().map(ev => `
+          <div onclick="focusMapPin('${ev.id}')" class="p-3.5 rounded-xl paper-card hover:border-ochre cursor-pointer transition flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-xs font-bold text-espresso truncate">${escapeHTML(ev.title)}</p>
+              <p class="text-[11px] text-umber">${escapeHTML(ev.area)} · ${escapeHTML(ev.time)}</p>
+            </div>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${ev.lat},${ev.lng}" target="_blank" rel="noopener" onclick="event.stopPropagation()"
+               class="px-2.5 py-1.5 rounded-lg bg-sand warm-border text-[11px] font-mono font-bold text-espresso hover:bg-ochre transition shrink-0">Go ↗</a>
+          </div>
+        `).join('');
+      }
+      renderLeafletMarkers();
+    }
+
+    function focusMapPin(id) {
+      const ev = state.events.find(e => e.id === id);
+      if (!ev) return;
+      document.getElementById('mapFocusLabel').textContent = `${ev.title} · ${ev.area}`;
+      if (mapInstance) mapInstance.flyTo([ev.lat, ev.lng], 14, { duration: 0.7 });
+    }
+
+    function toggleJoinEvent(id) {
+      const ev = state.events.find(e => e.id === id);
+      if (!ev) return;
+      if (ev.userJoined) {
+        ev.userJoined = false;
+        ev.joined = Math.max(1, ev.joined - 1);
+        state.tickets = state.tickets.filter(t => t.id !== ev.id);
+        showToast(`Left "${ev.title}"`, 'crimson');
+      } else {
+        if (ev.joined >= ev.max) return showToast('This drop is full!', 'crimson');
+        ev.userJoined = true;
+        ev.joined += 1;
+        const code = 'ESC-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+        state.tickets.unshift({ id: ev.id, title: ev.title, meta: `${ev.area} · ${ev.time}`, code, fee: ev.fee });
+
+        const chatId = `chat-${ev.id}`;
+        if (!state.chats[chatId]) {
+          state.chats[chatId] = {
+            id: chatId, name: ev.title, sub: `Drop Group · ${ev.area}`,
+            pinnedPlan: `${ev.area} · ${ev.time}`, lat: ev.lat, lng: ev.lng,
+            messages: [{ from: 'them', sender: ev.host, text: `Welcome to ${ev.title}! Drop a hi before we meet at ${ev.area}.`, time: 'Just now' }]
+          };
+        }
+        showToast(`Spot confirmed! Pass ${code} added to Hub`, 'sage');
+      }
+      saveState();
+      renderEvents();
+      renderSidebarTicket();
+      renderPassport();
+      updateBadges();
+    }
+
+    function submitHostDrop() {
+      const title = document.getElementById('hostTitle').value.trim();
+      const category = document.getElementById('hostCategory').value;
+      const area = document.getElementById('hostArea').value.trim() || 'Chennai';
+      const time = document.getElementById('hostTime').value.trim() || 'Tonight, 7:00 PM';
+      const max = Math.max(2, parseInt(document.getElementById('hostMax').value, 10) || 10);
+      const fee = Math.max(0, parseInt(document.getElementById('hostFee').value, 10) || 0);
+      const tag = document.getElementById('hostTag').value;
+
+      if (!title) return showToast('Please enter a drop title', 'crimson');
+
+      const newEv = {
+        id: 'ev-' + Date.now(), title, category, area, time, joined: 1, max, fee, tag,
+        host: state.user.name,
+        lat: 13.0418 + (Math.random() - 0.5) * 0.05,
+        lng: 80.2450 + (Math.random() - 0.5) * 0.05,
+        userJoined: true
+      };
+      state.events.unshift(newEv);
+      state.tickets.unshift({ id: newEv.id, title: newEv.title, meta: `Host · ${area} · ${time}`, code: 'HOST-' + Math.floor(1000 + Math.random() * 9000), fee: 0 });
+      state.chats[`chat-${newEv.id}`] = {
+        id: `chat-${newEv.id}`, name: newEv.title, sub: `Your Hosted Drop · ${area}`,
+        pinnedPlan: `${area} · ${time}`, lat: newEv.lat, lng: newEv.lng,
+        messages: [{ from: 'me', text: `Created "${title}"! Join in & say hi.`, time: 'Just now' }]
+      };
+
+      document.getElementById('hostTitle').value = '';
+      document.getElementById('hostArea').value = '';
+      closeModal('modal-host');
+      state.pulseFilter = 'All';
+      saveState();
+      renderPulseFilters();
+      renderEvents();
+      renderSidebarTicket();
+      renderPassport();
+      updateBadges();
+      switchTab('pulse');
+      showToast(`"${title}" is now live across Chennai!`, 'sage');
+    }
+
+    // =========================================================================
+    // TAB 2: ARENA (LIVE TELECAST, TOURNAMENTS, TEAMS & TALENT)
+    // =========================================================================
+    function selectLiveMatch(idx) {
+      state.activeLiveIdx = idx;
+      [0, 1].forEach(i => {
+        const pill = document.getElementById(`match-pill-${i}`);
+        pill.className = i === idx
+          ? 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-crimson text-white transition shadow-sm'
+          : 'px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-ivory text-umber warm-border hover:text-espresso transition';
+      });
+      renderLiveTheater();
+    }
+
+    function renderLiveTheater() {
+      const m = LIVE_MATCHES[state.activeLiveIdx] || LIVE_MATCHES[0];
+      document.getElementById('liveTournamentName').textContent = m.tournament;
+      document.getElementById('liveVenue').textContent = m.venue;
+      document.getElementById('liveHomeBadge').textContent = m.home.badge;
+      document.getElementById('liveHomeName').textContent = m.home.name;
+      document.getElementById('liveHomeArea').textContent = m.home.area;
+      document.getElementById('liveHomeScore').textContent = m.home.score;
+      document.getElementById('liveAwayBadge').textContent = m.away.badge;
+      document.getElementById('liveAwayName').textContent = m.away.name;
+      document.getElementById('liveAwayArea').textContent = m.away.area;
+      document.getElementById('liveAwayScore').textContent = m.away.score;
+      document.getElementById('liveViewers').textContent = m.viewers;
+      document.getElementById('liveCheers').textContent = m.cheers;
+      document.getElementById('liveSponsorText').textContent = m.sponsor;
+      document.getElementById('liveClock').textContent = formatClock(m.minutes, m.seconds);
+      document.getElementById('liveCommentary').textContent = m.commentary[commentaryIndex % m.commentary.length];
+
+      const chatBox = document.getElementById('liveChatFeed');
+      chatBox.innerHTML = m.chat.map(c => `
+        <div class="flex gap-2">
+          <span class="font-mono font-bold text-ochreDark shrink-0">@${escapeHTML(c.user)}:</span>
+          <span class="text-espresso">${escapeHTML(c.text)}</span>
+        </div>`).join('');
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function formatClock(min, sec) {
+      return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    }
+
+    function cheerLiveMatch() {
+      const m = LIVE_MATCHES[state.activeLiveIdx];
+      m.cheers += 1;
+      document.getElementById('liveCheers').textContent = m.cheers;
+      showToast(`Cheered for ${m.tournament}! 👏`, 'ochre');
+    }
+
+    function sendLiveChat() {
+      const input = document.getElementById('liveChatInput');
+      const text = input.value.trim();
+      if (!text) return;
+      LIVE_MATCHES[state.activeLiveIdx].chat.push({ user: state.user.name.toLowerCase(), text });
+      input.value = '';
+      renderLiveTheater();
+    }
+
+    function endorseTalent(talentId) {
+      const t = state.talents.find(x => x.id === talentId);
+      if (t) showToast(`Endorsed ${t.name} on Chennai Scout Radar!`, 'plum');
+    }
+
+    function renderArenaLists() {
+      document.getElementById('tournamentList').innerHTML = state.tournaments.map(t => `
+        <div class="p-4 rounded-2xl paper-card flex flex-col justify-between gap-4">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-sageSoft text-sage uppercase font-bold">${escapeHTML(t.sport)}</span>
+              <span class="text-xs font-mono text-umber">${escapeHTML(t.date)}</span>
+            </div>
+            <h3 class="font-serif font-bold text-base text-espresso leading-snug">${escapeHTML(t.name)}</h3>
+            <p class="text-[11px] text-umber">${escapeHTML(t.venue)}</p>
+            <div class="pt-2 space-y-1 text-xs font-mono">
+              <div class="flex justify-between"><span class="text-umber">Prize</span><span class="text-ochreDark font-bold">${escapeHTML(t.prize)}</span></div>
+              <div class="flex justify-between"><span class="text-umber">Entry</span><span class="text-espresso font-bold">₹${t.fee}</span></div>
+              <div class="flex justify-between"><span class="text-umber">Slots</span><span class="text-sage font-bold">${t.slotsLeft} left</span></div>
+            </div>
+          </div>
+          <button onclick="openTournamentModal('${t.id}')" class="w-full py-2.5 rounded-xl text-xs font-bold transition shadow-sm ${
+            t.registered ? 'bg-sageSoft text-sage border border-sage/35' : 'bg-ochre hover:bg-ochreDark text-espresso'
+          }">
+            ${t.registered ? '✓ Registered' : 'Register / Free Agent'}
+          </button>
+        </div>`).join('');
+
+      document.getElementById('teamLeaderboard').innerHTML = state.teams.map(team => `
+        <tr class="hover:bg-parchment/60">
+          <td class="py-3 font-mono ${team.rank === 1 ? 'text-ochreDark font-bold' : 'text-umber'}">${team.rank}</td>
+          <td class="py-3">
+            <p class="font-bold text-espresso">${escapeHTML(team.name)}</p>
+            <p class="text-[10px] text-umber">${escapeHTML(team.area)}</p>
+          </td>
+          <td class="py-3 text-umber">${escapeHTML(team.sport)}</td>
+          <td class="py-3 text-right font-mono text-espresso">${team.w}-${team.l}</td>
+          <td class="py-3 text-right font-mono font-bold text-sage">${team.pts}</td>
+        </tr>`).join('');
+
+      document.getElementById('talentSpotlight').innerHTML = state.talents.map(p => `
+        <div class="p-3.5 rounded-xl bg-parchment warm-border flex items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <p class="text-sm font-bold text-espresso">${escapeHTML(p.name)}</p>
+              <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-plumSoft text-plum font-bold">${escapeHTML(p.badge)}</span>
+            </div>
+            <p class="text-[11px] text-umber mt-0.5">${escapeHTML(p.team)} · ${escapeHTML(p.stat)}</p>
+          </div>
+          <button onclick="endorseTalent('${p.id}')" class="px-2.5 py-1.5 rounded-lg bg-ivory warm-border text-[11px] font-bold text-espresso hover:border-plum hover:text-plum transition shrink-0">
+            Endorse
+          </button>
+        </div>`).join('');
+    }
+
+    function openTournamentModal(id) {
+      const t = state.tournaments.find(x => x.id === id);
+      if (!t) return;
+      if (t.registered) return showToast('Already registered! View pass in Hub → Perks & Passes.', 'sage');
+      selectedTournamentId = id;
+      const platformFee = state.user.isPro ? 0 : Math.round(t.fee * 0.1);
+      document.getElementById('tournModalTitle').textContent = t.name;
+      document.getElementById('tournModalDetails').innerHTML = `
+        <div class="flex justify-between"><span class="text-umber">Venue</span><span class="font-semibold text-espresso">${escapeHTML(t.venue)}</span></div>
+        <div class="flex justify-between"><span class="text-umber">Entry Fee</span><span class="font-mono font-bold">₹${t.fee}</span></div>
+        <div class="flex justify-between"><span class="text-umber">ESC Platform Fee (10%)</span><span class="font-mono font-bold ${platformFee === 0 ? 'text-sage' : ''}">${platformFee === 0 ? '₹0 (ESC+)' : '₹' + platformFee}</span></div>
+        <div class="flex justify-between pt-2 warm-border-t font-bold"><span>Total Payable</span><span class="font-mono text-sage">₹${t.fee + platformFee}</span></div>`;
+      openModal('modal-tournament');
+    }
+
+    function confirmTournamentJoin() {
+      const t = state.tournaments.find(x => x.id === selectedTournamentId);
+      if (!t) return;
+      const teamName = document.getElementById('tournTeamInput').value.trim() || state.user.name;
+      const regType = document.getElementById('tournRegType').value;
+      t.registered = true;
+      t.slotsLeft = Math.max(0, t.slotsLeft - 1);
+      const code = 'ARENA-' + Math.floor(1000 + Math.random() * 9000);
+      state.tickets.unshift({
+        id: t.id, title: t.name,
+        meta: `${regType === 'freeagent' ? 'Free Agent' : 'Squad: ' + teamName} · ${t.date}`,
+        code, fee: t.fee
+      });
+      closeModal('modal-tournament');
+      saveState();
+      renderArenaLists();
+      renderSidebarTicket();
+      renderPassport();
+      renderPerksAndTickets();
+      showToast(`Registered for ${t.name}! Pass ${code} issued.`, 'sage');
+    }
+
+    // =========================================================================
+    // TAB 3: CONNECT (WITH BIDIRECTIONAL INCLUSIVE SAFE-GRAPH FOR SPARK)
+    // =========================================================================
+    function setConnectMode(mode) {
+      state.connectMode = mode;
+      saveState();
+      renderConnect();
+    }
+
+    function setConnectIdentityFilter(tag) {
+      state.connectIdentityFilter = tag;
+      saveState();
+      renderConnect();
+    }
+
+    function userInterestedGenders() {
+      const g = state.user.gender || 'Man';
+      const o = state.user.orientation || 'All';
+      if (o === 'Straight') return g === 'Man' ? ['Woman'] : ['Man'];
+      if (o === 'Gay') return ['Man', 'Non-Binary'];
+      if (o === 'Lesbian') return ['Woman', 'Non-Binary'];
+      return ['Man', 'Woman', 'Non-Binary'];
+    }
+
+    function renderConnect() {
+      document.querySelectorAll('.cmode-btn').forEach(btn => {
+        const active = btn.dataset.cmode === state.connectMode;
+        btn.className = `cmode-btn px-4 py-1.5 rounded-lg text-xs font-bold transition ${
+          active ? 'bg-espresso text-ivory shadow-sm' : 'text-umber hover:text-espresso'
+        }`;
+      });
+
+      const filterTags = ['All', 'LGBTQ+ Friendly', 'Queer', 'Women', 'Men', 'Non-Binary', 'Introvert', 'Extrovert'];
+      document.getElementById('identityFilterBar').innerHTML = filterTags.map(tag => {
+        const active = state.connectIdentityFilter === tag;
+        return `<button onclick="setConnectIdentityFilter('${tag}')" class="px-3 py-1 rounded-full text-[11px] font-semibold transition ${
+          active ? 'bg-plum text-white' : 'bg-parchment warm-border text-umber hover:text-espresso'
+        }">${tag}</button>`;
+      }).join('');
+
+      const myTargets = userInterestedGenders();
+      const myGender = state.user.gender || 'Man';
+      document.getElementById('safeGraphNote').textContent = state.connectMode === 'spark'
+        ? `Bidirectional Safe-Graph (${myGender} · ${state.user.orientation || 'All'})`
+        : 'Public venues only · Safe Graph ON';
+
+      const filtered = state.people.filter(p => {
+        const modeOk = p.mode === state.connectMode;
+        const idOk = state.connectIdentityFilter === 'All' || p.tags.includes(state.connectIdentityFilter);
+        if (state.connectMode === 'spark') {
+          const mutualOk = myTargets.includes(p.gender) && (p.interestedIn || []).includes(myGender);
+          return modeOk && idOk && mutualOk;
+        }
+        return modeOk && idOk;
+      });
+
+      const grid = document.getElementById('connectGrid');
+      if (!filtered.length) {
+        grid.innerHTML = `<div class="col-span-full p-8 rounded-2xl paper-card text-center text-xs text-umber space-y-2">
+          <p class="font-serif font-bold text-base text-espresso">No profiles match that exact filter</p>
+          <p>Switch to "All" above or update your Spark Safe-Graph preference inside Hub → Passport.</p>
+        </div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(p => `
+        <article class="p-5 rounded-2xl paper-card hover:border-ochre/70 transition flex flex-col justify-between gap-4">
+          <div class="space-y-3">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-ochreSoft/90 border border-ochre/35 flex items-center justify-center font-serif font-extrabold text-base text-espresso">
+                  ${escapeHTML(p.name[0])}
+                </div>
+                <div>
+                  <h3 class="font-serif font-bold text-lg text-espresso leading-tight">${escapeHTML(p.name)}</h3>
+                  <p class="text-[11px] text-umber">${escapeHTML(p.area)}</p>
+                </div>
+              </div>
+              <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-sageSoft text-sage">${p.reliability}% Show-Up</span>
+            </div>
+
+            <p class="text-xs text-espresso/85 leading-relaxed">${escapeHTML(p.bio)}</p>
+
+            <div class="flex flex-wrap gap-1.5">
+              ${p.tags.slice(0, 3).map(t => `<span class="text-[10px] px-2 py-0.5 rounded-md bg-plumSoft text-plum font-semibold">${escapeHTML(t)}</span>`).join('')}
+              ${p.interests.map(i => `<span class="text-[10px] px-2 py-0.5 rounded-md bg-parchment warm-border text-umber font-medium">${escapeHTML(i)}</span>`).join('')}
+            </div>
+
+            <div class="p-3 rounded-xl bg-parchment warm-border text-[11px] text-espresso">
+              <span class="text-ochreDark font-mono text-[10px] font-bold uppercase block mb-0.5">Ideal IRL Hangout</span>
+              ${escapeHTML(p.planIdea)}
+            </div>
+          </div>
+
+          <div class="flex gap-2 pt-2">
+            <button onclick="openSmartPlan('${p.id}')" class="flex-1 py-2.5 rounded-xl bg-sand warm-border hover:border-plum text-xs font-bold text-espresso flex items-center justify-center gap-1.5 transition">
+              <span class="material-symbols-outlined text-[15px] text-plum">auto_awesome</span> Smart Plan
+            </button>
+            <button onclick="startChatWithPerson('${p.id}')" class="flex-1 py-2.5 rounded-xl bg-ochre hover:bg-ochreDark text-espresso font-bold text-xs transition shadow-sm">
+              Connect &amp; Chat
+            </button>
+          </div>
+        </article>`).join('');
+    }
+
+    async function openSmartPlan(personId) {
+      const p = state.people.find(x => x.id === personId);
+      if (!p) return;
+      document.getElementById('planModalTitle').textContent = `Chennai Plan with ${p.name}`;
+      document.getElementById('planModalReason').textContent = escApiKey
+        ? 'Generating tailored public-venue plan via Gemini 3.5 Flash-Lite...'
+        : `Built around ${p.name}'s vibe (${p.interests.join(', ')}) near ${p.area} — low-pressure public venues with Show-Up accountability.`;
+
+      const steps = [
+        { time: '5:30 PM', place: p.area.split('·')[0].trim() + ' Meet Spot', note: p.planIdea },
+        { time: '7:00 PM', place: 'The Brew Room / Writer’s Café', note: 'Redeem your ESC 25% group coffee perk while debriefing.' },
+        { time: '8:15 PM', place: 'Public Sunset Wrap-Up', note: 'Safe, well-lit public finish — check in on ESC to earn +1 Show-Up rep.' }
+      ];
+      document.getElementById('planModalSteps').innerHTML = steps.map((s, idx) => `
+        <div class="p-3 rounded-xl bg-parchment warm-border flex gap-3">
+          <span class="w-6 h-6 rounded-lg bg-ochreSoft text-espresso font-mono text-xs font-bold flex items-center justify-center shrink-0">${idx + 1}</span>
+          <div class="text-xs">
+            <p class="font-bold text-espresso">${escapeHTML(s.place)} <span class="font-mono text-umber font-normal">· ${s.time}</span></p>
+            <p class="text-umber mt-0.5">${escapeHTML(s.note)}</p>
+          </div>
+        </div>`).join('');
+
+      document.getElementById('planConfirmBtn').onclick = () => {
+        closeModal('modal-plan');
+        startChatWithPerson(personId, `Hey ${p.name}! ESC curated a chill Chennai plan for us: ${p.planIdea}. Down this week?`);
+      };
+      openModal('modal-plan');
+
+      if (escApiKey) {
+        const aiReason = await callGeminiOptional(
+          `Write 2 warm sentences on why ${state.user.name} and ${p.name} in Chennai will click over ${p.interests.join(', ')} at ${p.area}.`,
+          120
+        );
+        if (aiReason) document.getElementById('planModalReason').textContent = aiReason;
+      }
+    }
+
+    function startChatWithPerson(personId, initialMsg = null) {
+      const p = state.people.find(x => x.id === personId);
+      if (!p) return;
+      const chatId = `chat-${p.id}`;
+      if (!state.chats[chatId]) {
+        state.chats[chatId] = {
+          id: chatId, name: p.name, sub: `${p.mode.toUpperCase()} · ${p.area}`,
+          pinnedPlan: p.planIdea, lat: 13.0418, lng: 80.2450,
+          messages: [{ from: 'them', text: `Hey ${state.user.name}! Saw we connected on ESC. Always down for ${p.interests[0].toLowerCase()} around Chennai!`, time: 'Just now' }]
+        };
+      }
+      if (initialMsg) state.chats[chatId].messages.push({ from: 'me', text: initialMsg, time: 'Just now' });
+      state.activeChatId = chatId;
+      saveState();
+      updateBadges();
+      switchTab('hub');
+      setHubSubTab('chats');
+    }
+
+    // =========================================================================
+    // TAB 4: HUB (CHATS, PERKS WALLET & PASSPORT)
+    // =========================================================================
+    function setHubSubTab(sub) {
+      state.hubSubTab = sub;
+      ['chats', 'perks', 'passport'].forEach(k => {
+        document.getElementById(`hub-${k}`).classList.toggle('hidden', k !== sub);
+      });
+      document.querySelectorAll('.htab-btn').forEach(btn => {
+        const active = btn.dataset.htab === sub;
+        btn.className = `htab-btn px-4 py-1.5 rounded-lg text-xs font-bold transition ${
+          active ? 'bg-espresso text-ivory shadow-sm' : 'text-umber hover:text-espresso'
+        }`;
+      });
+      renderHub();
+    }
+
+    function renderHub() {
+      renderChatThreads();
+      renderActiveChat();
+      renderPerksAndTickets();
+      renderPassport();
+    }
+
+    function renderChatThreads() {
+      const container = document.getElementById('chatThreadList');
+      const threads = Object.values(state.chats);
+      if (!state.chats[state.activeChatId] && threads.length) state.activeChatId = threads[0].id;
+
+      container.innerHTML = threads.map(th => {
+        const active = th.id === state.activeChatId;
+        const last = th.messages[th.messages.length - 1];
+        return `
+          <button onclick="selectChatThread('${th.id}')" class="w-full text-left p-3 rounded-xl transition flex items-center gap-3 ${
+            active ? 'bg-ochreSoft/70 warm-border border-ochre/50' : 'hover:bg-parchment'
+          }">
+            <div class="w-10 h-10 rounded-xl bg-sandDeep flex items-center justify-center font-serif font-bold text-sm text-espresso shrink-0">
+              ${escapeHTML(th.name[0])}
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center justify-between gap-2">
+                <p class="text-xs font-bold text-espresso truncate">${escapeHTML(th.name)}</p>
+                <span class="text-[10px] font-mono text-umber">${escapeHTML(last?.time || '')}</span>
+              </div>
+              <p class="text-[11px] text-umber truncate mt-0.5">${escapeHTML(last?.text || 'Start chatting...')}</p>
+            </div>
+          </button>`;
+      }).join('');
+    }
+
+    function selectChatThread(id) {
+      state.activeChatId = id;
+      saveState();
+      renderChatThreads();
+      renderActiveChat();
+    }
+
+    function renderActiveChat() {
+      const th = state.chats[state.activeChatId];
+      if (!th) return;
+      document.getElementById('chatHeaderTitle').textContent = th.name;
+      document.getElementById('chatHeaderSub').textContent = th.sub;
+
+      const pin = document.getElementById('chatPinnedPlan');
+      if (th.pinnedPlan) {
+        pin.classList.remove('hidden');
+        document.getElementById('chatPinnedPlanText').textContent = `📍 Plan: ${th.pinnedPlan}`;
+        document.getElementById('chatPinnedDirections').href = `https://www.google.com/maps/dir/?api=1&destination=${th.lat || 13.0418},${th.lng || 80.2341}`;
+      } else {
+        pin.classList.add('hidden');
+      }
+
+      const box = document.getElementById('chatMessagesBox');
+      box.innerHTML = th.messages.map(m => `
+        <div class="flex ${m.from === 'me' ? 'justify-end' : 'justify-start'}">
+          <div class="max-w-[80%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed shadow-sm ${
+            m.from === 'me' ? 'bg-espresso text-ivory rounded-br-sm' : 'bg-ivory warm-border text-espresso rounded-bl-sm'
+          }">
+            ${m.sender ? `<p class="text-[10px] font-mono font-bold text-ochreDark mb-0.5">${escapeHTML(m.sender)}</p>` : ''}
+            <p>${escapeHTML(m.text)}</p>
+            <p class="text-[9px] mt-1 ${m.from === 'me' ? 'text-ivory/60' : 'text-umber'}">${escapeHTML(m.time)}</p>
+          </div>
+        </div>`).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendThreadMessage() {
+      const input = document.getElementById('chatMessageInput');
+      const text = input.value.trim();
+      const th = state.chats[state.activeChatId];
+      if (!text || !th) return;
+
+      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      th.messages.push({ from: 'me', text, time: now });
+      input.value = '';
+      saveState();
+      renderChatThreads();
+      renderActiveChat();
+
+      const aiReply = await callGeminiOptional(
+        `You are ${th.name} chatting casually in Chennai on ESC about "${th.pinnedPlan || 'a meetup'}". Reply warmly in 1 short sentence to: "${text}"`,
+        80
+      );
+      setTimeout(() => {
+        const fallbacks = [
+          `Sounds awesome! Locking in my calendar for ${th.pinnedPlan || 'Chennai'} 🙌`,
+          `Count me in! Let's redeem that Brew Room filter coffee perk after.`,
+          `Perfect — see you there! Protecting my 98% Show-Up Score 😄`
+        ];
+        th.messages.push({
+          from: 'them',
+          text: aiReply || fallbacks[Math.floor(Math.random() * fallbacks.length)],
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        saveState();
+        renderChatThreads();
+        renderActiveChat();
+      }, aiReply ? 250 : 850);
+    }
+
+    function insertIcebreaker() {
+      const th = state.chats[state.activeChatId];
+      if (!th) return;
+      const openers = [
+        `Hey ${th.name}! Quick vote: filter coffee or cold brew before we start?`,
+        `Ready for ${th.pinnedPlan || 'a Chennai adventure'} this week? What time works best?`,
+        `Promise zero flaking — my 98% Show-Up Score is on the line 😄`
+      ];
+      document.getElementById('chatMessageInput').value = openers[Math.floor(Math.random() * openers.length)];
+      document.getElementById('chatMessageInput').focus();
+    }
+
+    // =========================================================================
+    // PERKS & TICKETS
+    // =========================================================================
+    function claimPerk(perkId) {
+      const perk = state.perks.find(p => p.id === perkId);
+      if (!perk) return;
+      if (state.claimedPerks[perkId]) return showToast(`Already claimed! Code: ${state.claimedPerks[perkId]}`, 'ochre');
+      if (perk.left <= 0) return showToast('All perks claimed for today!', 'crimson');
+      perk.left -= 1;
+      const code = 'ESC-' + perk.brand.replace(/[^A-Z]/gi, '').slice(0, 4).toUpperCase() + '-' + Math.floor(100 + Math.random() * 899);
+      state.claimedPerks[perkId] = code;
+      saveState();
+      renderEvents();
+      renderPerksAndTickets();
+      renderPassport();
+      showToast(`Perk claimed! Show ${code} at ${perk.brand}`, 'ochre');
+    }
+
+    function renderPerksAndTickets() {
+      const ticketsEl = document.getElementById('myTicketsList');
+      if (!state.tickets.length) {
+        ticketsEl.innerHTML = `<div class="col-span-full p-5 rounded-2xl paper-card text-xs text-umber">No active passes yet. Join a drop in Pulse or enter a Chennai competition in Arena!</div>`;
+      } else {
+        ticketsEl.innerHTML = state.tickets.map(t => `
+          <div class="p-4 rounded-2xl paper-card border-l-4 border-l-sage flex items-center justify-between gap-3">
+            <div>
+              <p class="font-serif font-bold text-base text-espresso">${escapeHTML(t.title)}</p>
+              <p class="text-xs text-umber mt-0.5">${escapeHTML(t.meta)}</p>
+            </div>
+            <div class="text-right shrink-0">
+              <span class="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-sageSoft text-sage">${escapeHTML(t.code)}</span>
+              <p class="text-[10px] font-mono text-umber mt-1">${t.fee === 0 ? 'FREE' : '₹' + t.fee}</p>
+            </div>
+          </div>`).join('');
+      }
+
+      document.getElementById('claimedPerkCounter').textContent = `${Object.keys(state.claimedPerks).length} Claimed`;
+      document.getElementById('perksGrid').innerHTML = state.perks.map(p => {
+        const code = state.claimedPerks[p.id];
+        return `
+          <div class="p-4 rounded-2xl paper-card flex flex-col justify-between gap-3">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="font-serif font-bold text-base text-espresso">${escapeHTML(p.brand)}</span>
+                <span class="text-[10px] font-mono text-umber">${p.left} left</span>
+              </div>
+              <p class="text-xs text-ochreDark font-bold mt-1">${escapeHTML(p.deal)}</p>
+              <p class="text-[11px] text-umber mt-0.5">📍 ${escapeHTML(p.area)}</p>
+            </div>
+            <div class="flex items-center justify-between gap-2 pt-2.5 warm-border-t">
+              ${code
+                ? `<span class="font-mono text-xs font-bold text-sage">CODE: ${escapeHTML(code)}</span>`
+                : `<button onclick="claimPerk('${p.id}')" class="px-3.5 py-1.5 rounded-lg bg-ochre hover:bg-ochreDark text-espresso font-bold text-xs transition shadow-sm">Claim Perk</button>`
+              }
+              <a href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}" target="_blank" rel="noopener" class="text-[11px] font-mono font-semibold text-umber hover:text-espresso">Directions ↗</a>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // =========================================================================
+    // PASSPORT & RIGHT SIDEBAR CONCIERGE
+    // =========================================================================
+    function renderPassport() {
+      const u = state.user;
+      document.getElementById('railAvatar').textContent = u.name[0]?.toUpperCase() || 'A';
+      document.getElementById('railName').textContent = u.name;
+      document.getElementById('railProBadge').classList.toggle('hidden', !u.isPro);
+
+      document.getElementById('passportAvatar').textContent = u.name[0]?.toUpperCase() || 'A';
+      document.getElementById('passportName').textContent = u.name;
+      document.getElementById('passportMeta').textContent = `${u.area} · ${u.identity.join(' · ') || 'Chennai Explorer'}`;
+      document.getElementById('passportProTag').classList.toggle('hidden', !u.isPro);
+      document.getElementById('passportUpgradeBtn').classList.toggle('hidden', u.isPro);
+
+      document.getElementById('statCheckins').textContent = u.checkins;
+      document.getElementById('statPasses').textContent = state.tickets.length;
+      document.getElementById('statPerks').textContent = Object.keys(state.claimedPerks).length;
+
+      document.getElementById('editName').value = u.name;
+      document.getElementById('editArea').value = u.area;
+      document.getElementById('editGender').value = u.gender || 'Man';
+      document.getElementById('editOrientation').value = u.orientation || 'All';
+      document.getElementById('escGeminiKey').value = escApiKey;
+      updateAiPill();
+
+      document.getElementById('editIdentityChips').innerHTML = IDENTITY_TAGS.map(tag => {
+        const active = u.identity.includes(tag);
+        return `<button onclick="toggleUserIdentity('${tag}')" class="px-3 py-1 rounded-full text-xs font-semibold transition ${
+          active ? 'bg-plum text-white' : 'bg-parchment warm-border text-umber hover:text-espresso'
+        }">${tag}</button>`;
+      }).join('');
+    }
+
+    function toggleUserIdentity(tag) {
+      const idx = state.user.identity.indexOf(tag);
+      if (idx >= 0) state.user.identity.splice(idx, 1);
+      else state.user.identity.push(tag);
+      saveState();
+      renderPassport();
+    }
+
+    function savePassport() {
+      const name = document.getElementById('editName').value.trim();
+      if (!name) return showToast('Display name cannot be empty', 'crimson');
+      state.user.name = name;
+      state.user.area = document.getElementById('editArea').value;
+      state.user.gender = document.getElementById('editGender').value;
+      state.user.orientation = document.getElementById('editOrientation').value;
+      saveState();
+      renderPassport();
+      renderConnect();
+      showToast('Chennai Passport & Safe-Graph updated!', 'sage');
+    }
+
+    function activatePro() {
+      state.user.isPro = true;
+      closeModal('modal-pro');
+      saveState();
+      renderPassport();
+      showToast('ESC+ Activated! 0% booking fees unlocked.', 'ochre');
+    }
+
+    async function runConcierge(mood) {
+      const box = document.getElementById('conciergeResult');
+      box.classList.remove('hidden');
+      const recommendations = {
+        football: { text: '⚽ Best drop tonight: 5v5 Floodlit Turf Football at T. Nagar (7:30 PM, ₹150) — 3 spots left!', action: () => { switchTab('pulse'); setPulseFilter('Sports'); } },
+        queer: { text: '🏳️‍🌈 Safe pick: Queer Book & Filter Coffee Circle at Amethyst (Free) + verified Queer profiles in Connect.', action: () => { switchTab('pulse'); setPulseFilter('LGBTQ+ Safe'); } },
+        coffee: { text: '☕ Chill plan: Claim 25% off at The Brew Room & join Madras Rapid Chess at Mylapore.', action: () => { switchTab('hub'); setHubSubTab('perks'); } }
+      };
+      const pick = recommendations[mood];
+      box.innerHTML = `<p>${escapeHTML(pick.text)}</p><button id="conciergeGoBtn" class="text-ochreDark font-mono text-[11px] font-bold underline">Jump there →</button>`;
+      document.getElementById('conciergeGoBtn').onclick = pick.action;
+    }
+
+    function renderSidebarTicket() {
+      const el = document.getElementById('sideNextTicket');
+      if (!state.tickets.length) {
+        el.innerHTML = 'No active drops yet. Join one from Pulse!';
+        return;
+      }
+      const t = state.tickets[0];
+      el.innerHTML = `
+        <p class="font-bold text-espresso">${escapeHTML(t.title)}</p>
+        <p class="text-[11px] text-umber mt-0.5">${escapeHTML(t.meta)}</p>
+        <span class="inline-block mt-2 font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-sageSoft text-sage">${escapeHTML(t.code)}</span>`;
+    }
+
+    function updateBadges() {
+      document.getElementById('badge-chats').textContent = Object.keys(state.chats).length;
+    }
+
+    // =========================================================================
+    // LIVE MATCH TICKER LOOP
+    // =========================================================================
+    setInterval(() => {
+      LIVE_MATCHES.forEach(m => {
+        m.seconds += 1;
+        if (m.seconds >= 60) { m.seconds = 0; m.minutes += 1; }
+      });
+      if (LIVE_MATCHES[0].seconds % 10 === 0) {
+        commentaryIndex += 1;
+        LIVE_MATCHES[0].viewers += Math.floor(Math.random() * 3) - 1;
+      }
+      const cur = LIVE_MATCHES[state.activeLiveIdx];
+      document.getElementById('liveClock').textContent = formatClock(cur.minutes, cur.seconds);
+      document.getElementById('liveViewers').textContent = cur.viewers;
+      document.getElementById('liveCommentary').textContent = cur.commentary[commentaryIndex % cur.commentary.length];
+      document.getElementById('sideClock').textContent = formatClock(LIVE_MATCHES[0].minutes, LIVE_MATCHES[0].seconds);
+      document.getElementById('sideViewers').textContent = LIVE_MATCHES[0].viewers;
+    }, 1000);
+
+    // =========================================================================
+    // BOOTSTRAP
+    // =========================================================================
+    function renderAll() {
+      renderPulseFilters();
+      renderEvents();
+      renderLiveTheater();
+      renderArenaLists();
+      renderConnect();
+      renderHub();
+      renderSidebarTicket();
+      updateBadges();
+      switchTab('pulse');
+    }
+
+    document.addEventListener('DOMContentLoaded', renderAll);
+  </script>
+</body>
+</html>
